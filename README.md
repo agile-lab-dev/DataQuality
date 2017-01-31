@@ -1,4 +1,4 @@
-# Distributed Data Quality
+# Data Quality for BigData
 ---
 
 Table of contents
