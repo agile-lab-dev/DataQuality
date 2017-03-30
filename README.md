@@ -21,8 +21,6 @@ DQ is a framework to build parallel and distributed quality checks on big data e
 It can be used to calculate metrics and perform checks to assure quality on structured or unstructured data.
 It relies entirely on Spark.
 
-It has been developed by a collaboration between [Agile Lab](http://www.agilelab.it) and [Unicredit D&A department](https://github.com/UniCreditDnA).
-
 Compared to typical data quality products, this framework performs quality checks at raw level.
 It doesn't leverage any kind of SQL abstraction like Hive or Impala because they perform type checks at runtime hiding bad formatted data.
 Hadoop is mainly unstructured data ( files ), so we think that quality checks must be performed at row level without typed abstractions.
