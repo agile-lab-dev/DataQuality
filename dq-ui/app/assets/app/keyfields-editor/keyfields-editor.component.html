@@ -1,0 +1,20 @@
+<h2 md-dialog-title>Keyfields Editor</h2>
+<md-dialog-content class="keyfields-dialog">
+        <md-form-field>
+                <input mdInput placeholder="Add Keyfield"  type="text" [(ngModel)]="keyField">
+        </md-form-field>
+        <md-icon md-list-icon (click)="addKeyField(keyField)">add_circle</md-icon>
+        <br />
+        <span class="errorValidation">{{errorValidation}}</span>
+        <br />
+        <br />
+        <md-list *ngFor="let keyfield of keyfields">
+                <md-list-item class="keyfield-item">
+                        <h4 md-line>{{keyfield}}</h4>
+                        <md-icon md-list-icon (click)="removeKeyField(keyfield)">delete</md-icon>
+                </md-list-item>
+        </md-list>
+</md-dialog-content>
+<md-dialog-actions>
+        <button md-raised-button (click)="done()">Done</button>
+</md-dialog-actions>

@@ -1,0 +1,11 @@
+<h2 md-dialog-title>Download Configuration</h2>
+<md-dialog-content>
+        <div>Chose a Name  for Configuration File</div>
+        <md-form-field>
+                <input mdInput placeholder="File Name" value="{{fileName}}" [(ngModel)]="fileName">
+        </md-form-field>
+</md-dialog-content>
+<md-dialog-actions>
+        <button md-raised-button (click)="download()">Download</button>
+        <button md-raised-button (click)="cancel()">Cancel</button>
+</md-dialog-actions>

@@ -1,0 +1,8 @@
+<h2 md-dialog-title>Content Editor</h2>
+<md-dialog-content>
+        <codemirror [(ngModel)]="content" [config]="config"></codemirror>
+</md-dialog-content>
+<md-dialog-actions>
+        <button md-raised-button (click)="done()">Done</button>
+        <button md-raised-button (click)="cancel()">Cancel</button>
+</md-dialog-actions>

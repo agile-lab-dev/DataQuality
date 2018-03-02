@@ -1,0 +1,30 @@
+<md-toolbar id="app-toolbar">
+<!--     <button md-icon-button [mdMenuTriggerFor]="menu">
+        <md-icon>more_vert</md-icon>
+    </button>
+    <md-menu #menu="mdMenu">
+        <app-menu></app-menu>
+    </md-menu> -->
+    <span>Data Quality</span>
+    <span class="example-spacer"></span>
+    <button class="example-icon"  md-icon-button routerLink="dataquality/editing" mdTooltip="Start editing">
+        <md-icon class="md-24" aria-label="">border_color</md-icon>
+    </button>
+    <button class="example-icon" md-icon-button routerLink="dataquality/uploadfile" mdTooltip="Upload a file">
+        <md-icon class="md-24" aria-label="">file_upload</md-icon>
+    </button>
+    <button class="example-icon" md-icon-button (click)="downloadConfigFile()" mdTooltip="Download config file">
+        <md-icon class="md-24" aria-label="">file_download</md-icon>
+    </button>
+    <button class="example-icon" md-icon-button (click)="openDatabaseDialog()" mdTooltip="Manage databases">
+        <md-icon class="md-24" aria-label="Databases">storage</md-icon>
+    </button>
+    <button class="example-icon" md-icon-button (click)="openTargetsDialog()" mdTooltip="Manage Targets">
+        <md-icon class="md-24" aria-label="Targets">gps_fixed</md-icon>
+    </button>
+    <button md-icon-button (click)="openComposedMetricsDialog()" mdTooltip="Manage Composed Metrics">
+        <md-icon class="md-24" aria-label="Composed Metrics">extensions</md-icon>
+    </button>
+</md-toolbar>
+
+<router-outlet></router-outlet>

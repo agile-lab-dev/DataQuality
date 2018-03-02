@@ -1,0 +1,12 @@
+<h2 md-dialog-title>Select Target's Checks</h2>
+<md-dialog-content>
+        <md-list *ngFor="let check of checks">
+                <md-list-item>
+                        <h4 md-line>{{check.id}}</h4>
+                        <md-slide-toggle [checked]= "check.checked" (change) = "checkedChange(check)"></md-slide-toggle>
+                </md-list-item>
+        </md-list>
+</md-dialog-content>
+<md-dialog-actions>
+        <button md-raised-button (click)="done()">Done</button>
+</md-dialog-actions>

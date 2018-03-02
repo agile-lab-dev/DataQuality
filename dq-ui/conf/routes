@@ -1,0 +1,112 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+# Home page
+GET     /                           controllers.Application.index
+
+# Map static resources from the /public folder to the /assets URL path
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+## Meta
+GET     /meta/rule/trend            controllers.meta.MetaController.getTrendCheckRules()
+
+GET     /meta/:entity               controllers.meta.MetaController.getMetaByType(entity: String, filter: Option[String])
+GET     /meta/:entity/id            controllers.meta.MetaController.getShortList(entity: String, filter: Option[String])
+GET     /meta/:entity/:id/next      controllers.meta.MetaController.getMetaForInstance(entity: String, id:String, filter: Option[String])
+GET     /meta/:entity/:id           controllers.meta.MetaController.getMetaById(id: String, entity: String)
+
+## Search
+GET     /search/:entity             controllers.search.SearchController.searchById(entity: String, query: String, filter: Option[String], ref_type: Option[String], ref_id: Option[String], page: Option[Int])
+
+## Sources
+GET     /database                   controllers.sources.DatabaseController.getAllDatabases(page: Option[Int])
+GET     /database/list/id           controllers.sources.DatabaseController.getIdList(filter: Option[String])
+
+POST    /database                   controllers.sources.DatabaseController.addDatabase
+GET     /database/:id               controllers.sources.DatabaseController.getDatabaseDetails(id: String)
+PUT     /database/:id               controllers.sources.DatabaseController.updateDatabase(id: String)
+DELETE  /database/:id               controllers.sources.DatabaseController.deleteDatabase(id: String)
+
+GET     /source                     controllers.sources.SourceController.getAllSources(db: Option[String], page: Option[Int], filter: Option[String])
+GET     /source/list/id             controllers.sources.SourceController.getIdList(filter: Option[String])
+DELETE  /source/:id                 controllers.sources.SourceController.deleteSourceById(id: String)
+
+POST    /source/database            controllers.sources.TableController.addDBTable
+GET     /source/database/:id        controllers.sources.TableController.getDBTableDetails(id: String)
+PUT     /source/database/:id        controllers.sources.TableController.updateDBTable(id: String)
+
+POST    /source/hive                controllers.sources.TableController.addHiveTable
+GET     /source/hive/:id            controllers.sources.TableController.getHiveTableDetails(id: String)
+PUT     /source/hive/:id            controllers.sources.TableController.updateHiveTable(id: String)
+
+POST    /source/hdfs                controllers.sources.FileController.addHdfsFile
+GET     /source/hdfs/:id            controllers.sources.FileController.getFileDetails(id: String)
+PUT     /source/hdfs/:id            controllers.sources.FileController.updateHdfsFile(id: String)
+
+GET     /source/hdfs/:id/schema     controllers.sources.FileController.getFileSchema(id:String)
+POST    /source/hdfs/:id/schema     controllers.sources.FileController.addFileField(id:String)
+DELETE  /source/hdfs/:id/schema     controllers.sources.FileController.deleteFileField(id:String)
+
+POST    /source/virtual             controllers.sources.VirtualSourceController.addVSRC()
+GET     /source/virtual/:id         controllers.sources.VirtualSourceController.getVSRCDetails(id: String)
+PUT     /source/virtual/:id         controllers.sources.VirtualSourceController.updateVSRC(id: String)
+
+## Metrics
+GET     /metric                     controllers.metrics.MetricController.getAllMetrics(src: Option[String], page: Option[Int], filter: Option[String])
+GET     /metric/list/id             controllers.metrics.MetricController.getIdList(filter: Option[String])
+DELETE  /metric/:id                 controllers.metrics.MetricController.deleteMetricById(id: String)
+
+POST    /metric/file                controllers.metrics.FileMetricController.addFileMetric
+GET     /metric/file/:id            controllers.metrics.FileMetricController.getMetricDetails(id: String)
+PUT     /metric/file/:id            controllers.metrics.FileMetricController.updateMetric(id: String)
+
+POST    /metric/column              controllers.metrics.ColumnMetricController.addColumnMetric
+GET     /metric/column/:id          controllers.metrics.ColumnMetricController.getMetricDetails(id: String)
+PUT     /metric/column/:id          controllers.metrics.ColumnMetricController.updateMetric(id: String)
+
+POST    /metric/composed            controllers.metrics.ComposedMetricController.addComposedMetric
+GET     /metric/composed/:id        controllers.metrics.ComposedMetricController.getMetricDetails(id: String)
+PUT     /metric/composed/:id        controllers.metrics.ComposedMetricController.updateMetric(id: String)
+
+## Checks
+GET     /check                      controllers.checks.CheckController.getAllChecks(db: Option[String], met: Option[String], page: Option[Int], filter: Option[String])
+GET     /check/list/id              controllers.checks.CheckController.getIdList(filter: Option[String])
+DELETE  /check/:id                  controllers.checks.CheckController.deleteCheckById(id: String)
+
+POST    /check/sql                  controllers.checks.SqlCheckController.addSqlCheck()
+GET     /check/sql/:id              controllers.checks.SqlCheckController.getCheckDetails(id: String)
+PUT     /check/sql/:id              controllers.checks.SqlCheckController.updateCheck(id: String)
+
+POST    /check/snapshot             controllers.checks.SnapshotCheckController.addSnapshotCheck()
+GET     /check/snapshot/:id         controllers.checks.SnapshotCheckController.getCheckDetails(id: String)
+PUT     /check/snapshot/:id         controllers.checks.SnapshotCheckController.updateCheck(id: String)
+
+POST    /check/trend                controllers.checks.TrendCheckController.addTrendCheck()
+GET     /check/trend/:id            controllers.checks.TrendCheckController.getCheckDetails(id: String)
+PUT     /check/trend/:id            controllers.checks.TrendCheckController.updateCheck(id: String)
+
+GET     /check/:id/to/target        controllers.checks.CheckController.listAvailableTargets(id: String)
+POST    /check/:id/to/target        controllers.checks.CheckController.addCheckToTargets(id: String)
+
+## Targets
+GET     /target                     controllers.targets.TargetController.getAllTargets(chk: Option[String], page: Option[Int], filter: Option[String])
+GET     /target/list/id             controllers.targets.TargetController.getIdList(filter: Option[String])
+
+POST    /target                     controllers.targets.TargetController.addTarget
+GET     /target/:id                 controllers.targets.TargetController.getTargetDetails(id: String)
+PUT     /target/:id                 controllers.targets.TargetController.updateTarget(id: String)
+DELETE  /target/:id                 controllers.targets.TargetController.deleteTarget(id: String)
+
+POST    /target/:id/mail            controllers.targets.TargetAttachmentsController.addTargetMail(id: String)
+GET     /target/:id/mail            controllers.targets.TargetAttachmentsController.getTargetMailList(id: String)
+DELETE  /target/:id/mail            controllers.targets.TargetAttachmentsController.deleteTargetMail(id: String)
+
+POST    /target/:id/check           controllers.targets.TargetAttachmentsController.addTargetCheck(id: String)
+GET     /target/:id/check           controllers.targets.TargetAttachmentsController.getTargetCheckList(id: String)
+DELETE  /target/:id/check           controllers.targets.TargetAttachmentsController.deleteTargetCheck(id: String)
+
+## Configs
+GET     /config                     controllers.config.ConfigController.downloadConfiguration
+POST    /config                     controllers.config.ConfigController.uploadConfiguration
+DELETE  /config                     controllers.config.ConfigController.resetConfiguration

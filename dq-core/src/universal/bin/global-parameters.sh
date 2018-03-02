@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+
+###### SPARK PARAMETERS
+NUM_EXECUTORS=20
+EXECUTOR_MEMORY=20g
+EXECUTOR_CORES=5
+DRIVER_MEMORY=10g
+EXECUTOR_MEMORY_OVERHEAD=5000
+DRIVER_MEMORY_OVERHEAD=5000
+SPARK_PARALLELISM=200
+
+HADOOP_DIR=/etc/hadoop/conf
+
+###### LOGGING PARAMETERS
+LOG_DIR="${SCRIPT_DIR}/../../logs"
+JAR_NAME="${SCRIPT_DIR}/../lib/*.jar"
+LOG_CONFIG="${SCRIPT_DIR}/../conf/log4j.properties"
+
+LOG_FILE="${LOG_DIR}/DQ_$(date +%Y-%m-%d)_sh".log
+EVENTLOG_DIR=${LOG_DIR}/sparklogs
+mkdir -p $LOG_DIR
+mkdir -p $EVENTLOG_DIR
+echo "Logging to file ${LOG_FILE}"
+

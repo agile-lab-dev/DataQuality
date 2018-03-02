@@ -1,0 +1,22 @@
+html, body {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.blocks{
+    border: solid black
+}
+
+.example-icon {
+  padding: 0 14px;
+}
+
+.example-spacer {
+  flex: 1 1 auto;
+}
+
+#app-toolbar {
+  background-color: #1A325E;
+  color: #ffffff;
+}

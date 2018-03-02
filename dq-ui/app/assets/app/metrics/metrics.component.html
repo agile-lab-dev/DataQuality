@@ -1,0 +1,152 @@
+<md-accordion>
+    <md-toolbar class="toolbar-metrics">
+            <button md-icon-button [mdMenuTriggerFor]="menu">
+                <md-icon>add_circle</md-icon>
+            </button>
+            <md-menu #menu="mdMenu">
+                    <button md-menu-item (click) = "addMetric('COLUMN')">
+                        <i class="material-icons">add_circle_outline</i>
+                        <span>New Column Metric</span>
+                    </button>
+                    <button md-menu-item (click) = "addMetric('FILE')">
+                        <i class="material-icons">add_circle_outline</i>
+                        <span>New File Metric</span>
+                    </button>    
+            </md-menu>
+            <span>Metrics</span>
+    </md-toolbar>
+
+
+    <md-toolbar class="subtitle">
+            <span>Column</span>
+            <md-form-field floatPlaceholder="never" class="search">
+                    <input mdInput placeholder="Search" [(ngModel)]="columnMetricSearch" (ngModelChange)="inputChange('COLUMN')">
+                    <button md-button *ngIf="columnMetricSearch" mdSuffix md-icon-button aria-label="Clear" (click)="clearSearch('COLUMN')">
+                        <md-icon>close</md-icon>
+                    </button>
+            </md-form-field>
+    </md-toolbar>
+    
+    <p *ngIf="columnMetrics.length <= 0" class="textnotavailable">No Column metrics available!</p>
+
+    <md-expansion-panel *ngFor="let metric of columnMetrics" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{metric.data.id}}
+                <small class="accordion-second">col {{metric.data.columns}}</small>
+            </h3>
+            <span *ngIf="metric.isNew"> &nbsp;(Draft) </span>
+        </md-expansion-panel-header>
+
+        <!-- common metric fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput [disabled]="!metric.isNew" placeholder="Metric Id" value="{{metric.data.id}}" [(ngModel)]="metric.data.id">
+        </md-form-field>
+        <md-select placeholder="Metric" [(ngModel)]="metric.data.name" class="formfieldspace" (change)="metricTypeChanged($event,metric)">
+                <md-option *ngFor="let metricDescriptor of columnMetricDescriptors" [value]="metricDescriptor">
+                    {{ metricDescriptor }}
+                </md-option>
+        </md-select>
+        <br />
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Description" value="{{metric.data.description}}" [(ngModel)]="metric.data.description">
+        </md-form-field>
+        <br />
+        <!-- column metric fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Column" [(ngModel)]="metric.column1">
+        </md-form-field>
+
+        <md-form-field class="formfieldspace" *ngIf="multipleColumMetrics.includes(metric.data.name)">
+            <input mdInput placeholder="Column" [(ngModel)]="metric.column2">
+        </md-form-field>
+        <br />
+        <ng-container *ngFor="let paramItem of metric.paramFields">
+           <ng-container *ngFor="let f of paramItem.parameters">
+                <md-form-field class="formfiledspace" *ngIf="paramItem.metricType == metric.data.name">
+                    <input  mdInput [placeholder]="f.name" [value]="f.value" [(ngModel)]="f.value">
+                </md-form-field>
+           </ng-container>
+        </ng-container>
+        <br />
+        <button mdLine md-raised-button (click)="open(metric.data.id)" *ngIf="!metric.isNew" class="formfieldspace button-checks">Show Checks</button>
+
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row>
+            <button md-raised-button (click)="createMetric('COLUMN',metric)" *ngIf="metric.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateMetric('COLUMN',metric)" *ngIf="!metric.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn"    (click)="deleteMetric('COLUMN',metric)" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+
+    <md-paginator [length]="columnMetricsElements"
+    [pageSize]="5"
+    (page)="pageChange($event,'COLUMN')">
+    </md-paginator>
+
+    <md-toolbar class="subtitle">
+        <span>File</span>
+        <md-form-field floatPlaceholder="never" class="search">
+                <input mdInput placeholder="Search" [(ngModel)]="fileMetricSearch" (ngModelChange)="inputChange('FILE')">
+                <button md-button *ngIf="fileMetricSearch" mdSuffix md-icon-button aria-label="Clear" (click)="clearSearch('FILE')">
+                    <md-icon>close</md-icon>
+                </button>
+        </md-form-field>
+</md-toolbar>
+
+    <p *ngIf="fileMetrics.length <= 0" class="textnotavailable">No File metrics available!</p>
+
+    <md-expansion-panel *ngFor="let metric of fileMetrics" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{metric.data.id}}
+                <small class="accordion-second">metric {{metric.data.name}}</small>
+            </h3>
+            <span *ngIf="metric.isNew"> &nbsp;(Draft) </span>
+        </md-expansion-panel-header>
+        <br />
+
+        <!-- common metric fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput [disabled]="!metric.isNew" placeholder="Metric Id" value="{{metric.data.id}}" [(ngModel)]="metric.data.id">
+        </md-form-field>
+        <br />
+        <md-select placeholder="Metric" [(ngModel)]="metric.data.name" class="formfieldspace" (change)="metricTypeChanged($event,metric)">
+                <md-option *ngFor="let metricDescriptor of fileMetricDescriptors" [value]="metricDescriptor">
+                    {{ metricDescriptor }}
+                </md-option>
+        </md-select>
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Description" value="{{metric.data.description}}" [(ngModel)]="metric.data.description">
+        </md-form-field>
+        <br />
+        <!-- file metric fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput disabled placeholder="Source" value="{{metric.data.source}}" [(ngModel)]="metric.data.source">
+        </md-form-field>
+        <br />
+        <button mdLine md-raised-button (click)="open(metric.data.id)" *ngIf="!metric.isNew" class="formfieldspace button-checks">Show Checks</button>
+
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row>
+            <button md-raised-button (click)="createMetric('FILE',metric)" *ngIf="metric.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateMetric('FILE',metric)" *ngIf="!metric.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn"    (click)="deleteMetric('FILE',metric)" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+    <md-paginator [length]="fileMetricsElements"
+    [pageSize]="5"
+    (page)="pageChange($event,'FILE')">
+    </md-paginator>
+
+   
+
+</md-accordion>

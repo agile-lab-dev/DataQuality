@@ -1,0 +1,275 @@
+<md-accordion>
+    <md-toolbar class="toolbar-sources">
+        <button md-icon-button [mdMenuTriggerFor]="menu">
+                <md-icon>add_circle</md-icon>
+            </button>
+        <md-menu #menu="mdMenu">
+            <button md-menu-item (click)="addSource('HDFS')">
+                    <i class="material-icons">add_circle_outline</i>
+                    <span>New Hdfs Source</span>
+                </button>
+            <button md-menu-item (click)="addSource('HIVE')">
+                    <i class="material-icons">add_circle_outline</i>
+                    <span>New Hive Source</span>
+                </button>
+            <button md-menu-item (click)="addSource('TABLE')">
+                    <i class="material-icons">add_circle_outline</i>
+                    <span>New Table Source</span>
+                </button>
+            <button md-menu-item (click)="addSource('VIRTUAL')">
+                    <i class="material-icons">add_circle_outline</i>
+                    <span>New Virtual Source</span>
+                </button>
+        </md-menu>
+        <span>Sources</span>
+    </md-toolbar>
+
+    <span class="subtitle">HDFS</span>
+
+    <p *ngIf="hdfsSources.length <= 0" class="textnotavailable">No HDFS sources available!</p>
+
+    <md-expansion-panel *ngFor="let source of hdfsSources" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{source.data.id}}
+            </h3>
+            <span *ngIf="source.isNew"> &nbsp;(Draft) </span>
+        </md-expansion-panel-header>
+        <!-- common sources fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput [disabled]="!source.isNew" placeholder="Source Id" value="{{source.data.id}}" [(ngModel)]="source.data.id">
+        </md-form-field>
+        <br />
+        <!-- source hdfs fields !-->
+        <md-form-field class="textfieldlong formfieldspace">
+            <input mdInput placeholder="Path" value="{{source.data.path}}" [(ngModel)]="source.data.path">
+        </md-form-field>
+        <br />
+
+        <md-select placeholder="File Type" [(ngModel)]="source.data.fileType" class="formfieldspace">
+            <md-option *ngFor="let fileType of file_types" [value]="fileType">
+                {{ fileType }}
+            </md-option>
+        </md-select>
+
+        <md-select placeholder="Separator" [(ngModel)]="source.data.separator" *ngIf="source.data.fileType == 'csv'" class="formfieldspace">
+            <md-option *ngFor="let separator of separators" [value]="separator">
+                {{ separator }}
+            </md-option>
+        </md-select>
+
+        <md-checkbox [(ngModel)]="source.header" *ngIf="source.data.fileType == 'csv'" class="formfieldspace">Header</md-checkbox>
+
+        <br />
+        <br />
+        <md-button-toggle-group #group="mdButtonToggleGroup" [(ngModel)]="source.schemaValue">
+            <md-button-toggle value="schema" [disabled]="source.data.fileType != 'csv'" >Schema</md-button-toggle>
+            <md-button-toggle value="schemaPath">Schema Path</md-button-toggle>
+        </md-button-toggle-group>
+        <br />
+
+        <md-form-field class="textfieldlong formfieldspace" *ngIf="group.value == 'schemaPath'">
+                <input mdInput placeholder="Schema Path" value="{{source.data.schemaPath}}" [(ngModel)]="source.data.schemaPath">
+        </md-form-field>
+        <md-form-field class="formfieldspace" *ngIf="group.value == 'schema'">
+                <textarea mdInput placeholder="Schema" [(ngModel)]="source.schemaFe" class="textarealong"></textarea>
+        </md-form-field>
+        <br />
+        <md-form-field class="formfieldspace">
+            <input mdInput [mdDatepicker]="picker" placeholder="Source Date" [(ngModel)]="source.dateFe">
+            <md-datepicker-toggle mdSuffix [for]="picker"></md-datepicker-toggle>
+            <md-datepicker #picker></md-datepicker>
+        </md-form-field>
+        <br />
+        <button md-raised-button (click)="openKeyfieldsEditorDialog(source)" class="formfieldspace button-checks">KeyFields ({{source.data.keyFields.length}})</button>
+        <br /> 
+        <button mdLine md-raised-button (click)="open(source.data.id)" *ngIf="!source.isNew" class="formfieldspace button-metrics">Show Metrics</button>
+        <br />
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row>
+            <button md-raised-button (click)="createSource('HDFS',source)" *ngIf="source.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateSource('HDFS',source)" *ngIf="!source.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn" (click)="deleteSource('HDFS',source)" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+    <md-paginator [length]="hdfsNumberPages"
+    [pageSize]="5"
+    (page)="pageChange($event,'HDFS')">
+    </md-paginator>
+    <span class="subtitle">Hive</span>
+
+    <p *ngIf="hiveSources.length <= 0" class="textnotavailable">No Hive sources available!</p>
+
+    <md-expansion-panel *ngFor="let source of hiveSources" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{source.data.id}}
+            </h3>
+        </md-expansion-panel-header>
+        <!-- common sources fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Source Id" value="{{source.data.id}}" [(ngModel)]="source.data.id">
+        </md-form-field>
+
+        <br />
+
+        <!-- source hive fields !-->
+
+        <br />
+
+        <md-form-field class="formfieldspace">
+            <input mdInput [mdDatepicker]="picker" placeholder="Source Date" [(ngModel)]="source.dateFe">
+            <md-datepicker-toggle mdSuffix [for]="picker"></md-datepicker-toggle>
+            <md-datepicker #picker></md-datepicker>
+        </md-form-field>
+        <br />
+
+        <button md-raised-button (click)="openSQLEditorDialog(source)" class="formfieldspace button-checks">Query</button>            
+        
+        <button md-raised-button (click)="openKeyfieldsEditorDialog(source)" class="formfieldspace button-checks">KeyFields ({{source.data.keyFields.length}})</button>
+        <br /> 
+
+        <button mdLine md-raised-button (click)="open(source.data.id)" *ngIf="!source.isNew" class="formfieldspace button-metrics">Show Metrics</button>
+
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row>
+            <button md-raised-button (click)="createSource('HIVE',source)" *ngIf="source.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateSource('HIVE',source)" *ngIf="!source.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn" (click)="deleteSource('HIVE',source)" *ngIf="!source.isNew" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+
+    <md-paginator  [length]="hiveNumberPages"
+    [pageSize]="5"
+    (page)="pageChange($event,'HIVE')">
+    </md-paginator>
+
+    <span class="subtitle">Table</span>
+
+    <p *ngIf="tableSources.length <= 0" class="textnotavailable">No Table sources available!</p>
+
+    <md-expansion-panel *ngFor="let source of tableSources" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{source.data.id}}
+            </h3>
+            <span *ngIf="source.isNew"> &nbsp;(Draft) </span>
+        </md-expansion-panel-header>
+        <!-- common sources fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput [disabled]="!source.isNew" placeholder="Source Id" value="{{source.data.id}}" [(ngModel)]="source.data.id">
+        </md-form-field>
+        <br />
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Table" value="{{source.data.table}}" [(ngModel)]="source.data.table">
+        </md-form-field>
+        <!-- source table fields !-->
+        <md-select placeholder="Database" [(ngModel)]="source.data.database" (click)="getDatabaseIds()" class="formfieldspace">
+            <md-option *ngFor="let databaseId of databaseIds" [value]="databaseId">
+                {{ databaseId }}
+            </md-option>
+        </md-select>
+        <br />
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Username" value="{{source.data.username}}" [(ngModel)]="source.data.username">
+        </md-form-field>
+        <md-form-field class="formfieldspace">
+            <input mdInput type="password" placeholder="Password" value="{{source.data.password}}" [(ngModel)]="source.data.password">
+        </md-form-field>
+        <br />
+
+        <button md-raised-button (click)="openKeyfieldsEditorDialog(source)" class="formfieldspace button-checks">KeyFields ({{source.data.keyFields.length}})</button>
+        <br /> 
+
+        <button mdLine md-raised-button (click)="open(source.data.id)" *ngIf="!source.isNew" class="formfieldspace button-metrics">Show Metrics</button>
+
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row id="textposition">
+            <button md-raised-button (click)="createSource('TABLE',source)" *ngIf="source.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateSource('TABLE',source)" *ngIf="!source.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn" (click)="deleteSource('TABLE',source)" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+
+    <md-paginator [length]="tableNumberPages"
+    [pageSize]="5"
+    (page)="pageChange($event,'TABLE')">
+    </md-paginator>
+
+    <span class="subtitle">Virtual</span>
+    
+        <p *ngIf="virtualSources.length <= 0" class="textnotavailable">No Virtual sources available!</p>
+    
+        <md-expansion-panel *ngFor="let source of virtualSources" (opened)="close()">
+            <md-expansion-panel-header>
+                <h3 class="accordion-first">
+                    {{source.data.id}}
+                </h3>
+                <span *ngIf="source.isNew"> &nbsp;(Draft) </span>
+            </md-expansion-panel-header>
+            <!-- common sources fields !-->
+            <md-form-field class="formfieldspace">
+                <input mdInput [disabled]="!source.isNew" placeholder="Source Id" value="{{source.data.id}}" [(ngModel)]="source.data.id">
+            </md-form-field>
+            <br />
+            
+            <!-- virtual source fields !-->
+            <md-select placeholder="Type" [(ngModel)]="source.data.tipo" class="formfieldspace">
+                <md-option *ngFor="let virtualSourceType of virtualSourceTypes" [value]="virtualSourceType">
+                    {{ virtualSourceType }}
+                </md-option>
+            </md-select>
+            <br />
+
+            <md-select placeholder="Source" [(ngModel)]="source.data.left" (click)="getSourceIds($event)" class="formfieldspace">
+                <md-option *ngFor="let sourceId of sourceIds" [value]="sourceId">
+                    {{ sourceId }}
+                </md-option>
+            </md-select>
+
+            <md-select placeholder="Source" [(ngModel)]="source.data.right" *ngIf="source.data.tipo == 'JOIN_SQL'" (click)="getSourceIds()" class="formfieldspace">
+                <md-option *ngFor="let sourceId of sourceIds" [value]="sourceId">
+                    {{ sourceId }}
+                </md-option>
+            </md-select>
+
+            <br />        
+        
+            
+            <button md-raised-button (click)="openSQLEditorDialog(source)" class="formfieldspace button-checks">Query</button>            
+
+            <button md-raised-button (click)="openKeyfieldsEditorDialog(source)" class="formfieldspace button-checks">KeyFields ({{source.data.keyFields.length}})</button>
+            <br /> 
+    
+            <button mdLine md-raised-button (click)="open(source.data.id)" *ngIf="!source.isNew" class="formfieldspace button-metrics">Show Metrics</button>
+    
+            <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+                <ul class="errorValidation">
+                    <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+                </ul>
+            </span>
+            <md-action-row id="textposition">
+                <button md-raised-button (click)="createSource('VIRTUAL',source)" *ngIf="source.isNew" class="buttonspace">Create</button>
+                <button md-raised-button (click)="updateSource('VIRTUAL',source)" *ngIf="!source.isNew" class="buttonspace">Save</button>
+                <button md-raised-button color="warn" (click)="deleteSource('VIRTUAL',source)" class="buttonspace">Delete</button>
+            </md-action-row>
+        </md-expansion-panel>
+        <md-paginator class="pagonator" [length]="virtualNumberPages"
+        [pageSize]="5"
+        (page)="pageChange($event,'VIRTUAL')">
+        </md-paginator>
+
+
+</md-accordion>

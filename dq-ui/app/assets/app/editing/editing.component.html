@@ -1,0 +1,32 @@
+<div class="container">
+<!--   <md-toolbar>
+    <button md-icon-button [mdMenuTriggerFor]="menu">
+        <md-icon>more_vert</md-icon>
+    </button>
+    <md-menu #menu="mdMenu">
+        <app-menu></app-menu>
+    </md-menu>
+    <a md-icon-button color="warn" routerLink="/uploadfile" mdTooltip="Upload a file" mdTooltipPosition="right">
+        <md-icon class="md-24" aria-label="">file_upload</md-icon>
+    </a>
+    <a md-icon-button color="warn" routerLink="/editing" mdTooltip="Start editing" mdTooltipPosition="right">
+        <md-icon class="md-24" aria-label="">insert_drive_file</md-icon>
+    </a>
+    <button md-icon-button (click)="downloadConfigFile()" mdTooltip="Download config file" mdTooltipPosition="right">
+        <md-icon class="md-24" aria-label="">file_download</md-icon>
+    </button>
+    <button md-icon-button (click)="openDatabaseDialog()" mdTooltip="Manage databases" mdTooltipPosition="right">
+        <md-icon class="md-24" aria-label="Databases">storage</md-icon>
+    </button>
+    <button md-icon-button (click)="openTargetsDialog()" mdTooltip="Manage Targets">
+        <md-icon class="md-24" aria-label="Targets">gps_fixed</md-icon>
+    </button>
+  </md-toolbar> -->
+  <div fxLayout="column" fxLayout.gt-xs="row" fxLaylexoutAlign="start" class="content spacebox">
+    <app-sources fxFlex="33" *ngIf="isShow('sources')" (onOpen)="onOpen($event)" (onClose)="onClose($event)" class="app-box"></app-sources>
+    <app-metrics fxFlex="33" *ngIf="isShow('metrics')" (onOpen)="onOpen($event)" (onClose)="onClose($event)" class="app-box"></app-metrics>
+    <app-checks fxFlex="33" *ngIf="isShow('checks')" (onOpen)="onOpen($event)" (onClose)="onClose($event)" class="app-box"></app-checks>
+    <!-- TODO remove? not used -->
+    <!-- <app-targets fxFlex *ngIf="isShow('targets')" (onOpen)="onOpen($event)" (onClose)="onClose($event)"></app-targets> -->
+  </div>
+</div>

@@ -1,0 +1,20 @@
+<h2 md-dialog-title>Mailing List</h2>
+<md-dialog-content class="mail-dialog">
+        <md-form-field>
+                <input mdInput placeholder="Add Mail"  type="mail" value="{{newMail}}" [(ngModel)]="newMail">
+        </md-form-field>
+        <md-icon md-list-icon (click)="addMail(newMail)">add_circle</md-icon>
+        <br />
+        <span class="errorValidation">{{errorValidation}}</span>
+        <br />
+        <br />
+        <md-list *ngFor="let mail of mails">
+                <md-list-item class="mail-item">
+                        <h4 md-line>{{mail}}</h4>
+                        <md-icon md-list-icon (click)="removeMail(mail)">delete</md-icon>
+                </md-list-item>
+        </md-list>
+</md-dialog-content>
+<md-dialog-actions>
+        <button md-raised-button (click)="done()">Done</button>
+</md-dialog-actions>

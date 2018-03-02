@@ -1,0 +1,183 @@
+<md-accordion>
+    <md-toolbar class="toolbar-checks">
+        <button md-icon-button [mdMenuTriggerFor]="menu">
+                    <md-icon>add_circle</md-icon>
+                </button>
+        <md-menu #menu="mdMenu">
+            <button md-menu-item (click)="addCheck('snapshot')">
+                          <i class="material-icons">add_circle_outline</i>
+                          <span>New Snapshot Check</span>
+                        </button>
+            <button md-menu-item (click)="addCheck('trend')">
+                          <i class="material-icons">add_circle_outline</i>
+                          <span>New Trend Check</span>
+                        </button>
+        </md-menu>
+        <span>Checks</span>
+    </md-toolbar>
+
+    <md-toolbar class="subtitle">
+        <span>Snapshot</span>
+        <md-form-field floatPlaceholder="never" class="search">
+                <input mdInput placeholder="Search" [(ngModel)]="snapshotCheckSearch" (ngModelChange)="inputChange('snapshot')">
+                <button md-button *ngIf="snapshotCheckSearch" mdSuffix md-icon-button aria-label="Clear" (click)="clearSearch('snapshot')">
+                    <md-icon>close</md-icon>
+                </button>
+        </md-form-field>
+    </md-toolbar>
+
+    <p *ngIf="snapshotChecks.length <= 0" class="textnotavailable">No Snapshot checks available!</p>
+
+    <md-expansion-panel *ngFor="let snapshot of snapshotChecks" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{snapshot.data.id}} - {{snapshot.activeGroupValue}}
+                <small class="accordion-second">subtype {{snapshot.data.subtype}}</small>
+            </h3>
+        </md-expansion-panel-header>
+
+        <!-- common checks fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput [disabled]="!snapshot.isNew" placeholder="snapshot Id" value="{{snapshot.data.id}}" [(ngModel)]="snapshot.data.id">
+        </md-form-field>
+        <br />
+
+        <!-- check trend fields !-->
+
+        <md-select placeholder="Subtype" [(ngModel)]="snapshot.data.subtype" class="formfieldspace">
+            <md-option *ngFor="let snapshotCheckSubType of snapshotCheckSubTypes" [value]="snapshotCheckSubType">
+                {{ snapshotCheckSubType }}
+            </md-option>
+        </md-select>
+
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Description" value="{{snapshot.data.description}}" [(ngModel)]="snapshot.data.description">
+        </md-form-field>
+
+        <br />
+
+        <md-button-toggle-group #group="mdButtonToggleGroup" [(ngModel)]="snapshot.groupValue" (change) = "toggleChange($event,snapshot)">
+            <md-button-toggle value="metric">Metric</md-button-toggle> 
+            <md-button-toggle value="threshold">Threashold</md-button-toggle>
+        </md-button-toggle-group>
+        <br />
+        <md-form-field *ngIf="group.value == 'threshold'" class="formfieldspace">
+            <input mdInput placeholder="Treshold" type="number" value="{{snapshot.threshold}}" [(ngModel)]="snapshot.threshold">
+        </md-form-field>
+        <md-select *ngIf="group.value == 'metric'" placeholder="Compare Metric" class="formfieldspace" [(ngModel)]="snapshot.compareMetric">
+            <md-option *ngFor="let compareMetric of compareMetrics" [value]="compareMetric">
+                {{ compareMetric }}
+            </md-option>
+        </md-select>
+        <md-slider placeholder="Treshold" max="1" min="0" step="0.1" [thumb-label]="true" [(ngModel)]="snapshot.threshold" *ngIf="group.value == 'metric' && snapshot.data.subtype == 'DIFFER_BY_LT'">
+
+        </md-slider>
+        <br />
+        <md-form-field class="formfieldspace">
+            <input mdInput disabled placeholder="Metric" value="{{snapshot.data.metric}}" [(ngModel)]="snapshot.data.metric">
+        </md-form-field>
+
+        <br />
+
+        <button md-raised-button (click)="openTargetsDialog(snapshot)" class="formfieldspace" class="formfieldspace">Targets ({{snapshot.targetIds.length}})</button>
+
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row>
+            <button md-raised-button (click)="createCheck('snapshot', snapshot)" *ngIf="snapshot.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateCheck('snapshot', snapshot)" *ngIf="!snapshot.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn" (click)="deleteCheck('snapshot', snapshot)" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+    <md-paginator [length]="snapshotCheckElements"
+    [pageSize]="5"
+    (page)="pageChange($event,'snapshot')">
+    </md-paginator>
+
+    <md-toolbar class="subtitle">
+        <span>Trend</span>
+        <md-form-field floatPlaceholder="never" class="search">
+                <input mdInput placeholder="Search" [(ngModel)]="trendCheckSearch" (ngModelChange)="inputChange('trend')">
+                <button md-button *ngIf="trendCheckSearch" mdSuffix md-icon-button aria-label="Clear" (click)="clearSearch('trend')">
+                    <md-icon>close</md-icon>
+                </button>
+        </md-form-field>
+    </md-toolbar>
+
+    <p *ngIf="trendChecks.length <= 0" class="textnotavailable">No Trend checks available!</p>
+
+    <md-expansion-panel *ngFor="let trend of trendChecks" (opened)="close()">
+        <md-expansion-panel-header>
+            <h3 class="accordion-first">
+                {{trend.data.id}}
+                <small class="accordion-second">subtype {{trend.data.subtype}}</small>
+            </h3>
+            <span *ngIf="trend.isNew"> &nbsp;(Draft) </span>
+        </md-expansion-panel-header>
+
+        <!-- common checks fields !-->
+        <md-form-field class="formfieldspace">
+            <input mdInput [disabled]="!trend.isNew" placeholder="trend Id" value="{{trend.data.id}}" [(ngModel)]="trend.data.id">
+        </md-form-field>
+        <br />
+
+        <!-- check snapshot fields !-->
+
+        <md-select placeholder="Subtype" [(ngModel)]="trend.data.subtype" class="formfieldspace">
+            <md-option *ngFor="let trendCheckSubType of trendCheckSubTypes" [value]="trendCheckSubType">
+                {{ trendCheckSubType }}
+            </md-option>
+        </md-select>
+        <md-select placeholder="Rule" [(ngModel)]="trend.data.rule" class="formfieldspace">
+            <md-option *ngFor="let rule of rules" [value]="rule">
+                {{ rule }}
+            </md-option>
+        </md-select>
+        <br />
+
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Description" value="{{trend.data.description}}" [(ngModel)]="trend.data.description">
+        </md-form-field>
+        <br />
+
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Treshold" type="number" value="{{trend.threshold}}" [(ngModel)]="trend.threshold">
+        </md-form-field>
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Time Window" type="number" value="{{trend.timeWindow}}" [(ngModel)]="trend.timeWindow">
+        </md-form-field>
+        <md-form-field class="formfieldspace" *ngIf="trend.data.subtype == 'TOP_N_RANK_CHECK'">
+            <input mdInput placeholder="Target Number" type="number" value="{{trend.targetNumber}}" [(ngModel)]="trend.targetNumber">
+        </md-form-field>
+        <md-form-field class="formfieldspace">
+            <input mdInput placeholder="Start Date" [(ngModel)]="trend.startDate">
+        </md-form-field>
+        <br />
+
+        <md-form-field class="formfieldspace">
+            <input mdInput disabled placeholder="Metric" value="{{trend.data.metric}}" [(ngModel)]="trend.data.metric">
+        </md-form-field>
+
+        <br />
+        <button md-raised-button (click)="openTargetsDialog(trend)" class="formfieldspace">Targets ({{trend.targetIds.length}})</button>
+
+        <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+            <ul class="errorValidation">
+                <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+            </ul>
+        </span>
+        <md-action-row>
+            <button md-raised-button (click)="createCheck('trend', trend)" *ngIf="trend.isNew" class="buttonspace">Create</button>
+            <button md-raised-button (click)="updateCheck('trend', trend)" *ngIf="!trend.isNew" class="buttonspace">Save</button>
+            <button md-raised-button color="warn" (click)="deleteCheck('trend', trend)" class="buttonspace">Delete</button>
+        </md-action-row>
+    </md-expansion-panel>
+    <md-paginator  [length]="trendCheckElements"
+    [pageSize]="5"
+    (page)="pageChange($event,'trend')">
+    </md-paginator>
+
+</md-accordion>

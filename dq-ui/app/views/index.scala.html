@@ -1,0 +1,32 @@
+@()
+<!doctype html>
+<html lang="en" data-framework="angular2">
+    <head>
+        <base href="/" />
+        @* In this version of the application the typescript compilation is done by the play framework.
+           The browser downloads .js files. *@
+        <meta charset="utf-8">
+        <title>Data Quality Config Tool</title>
+        <link rel="stylesheet" href='@routes.Assets.versioned("stylesheets/reset.css")'>
+        <link rel="stylesheet" href='@routes.Assets.versioned("/stylesheets/indigo-pink.css")'>
+        <link rel="stylesheet" href='@routes.Assets.versioned("/stylesheets/styles.css")'>
+        <link rel="stylesheet" href='@routes.Assets.versioned("/lib/codemirror/lib/codemirror.css")'>
+        <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+        
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js"></script>
+        <script type='text/javascript' src='@routes.Assets.versioned("lib/core-js/client/shim.min.js")'></script>
+        <script type='text/javascript' src='@routes.Assets.versioned("lib/zone.js/dist/zone.js")'></script>
+        <script type='text/javascript' src='@routes.Assets.versioned("lib/systemjs/dist/system.src.js")'></script>
+
+        <script type='text/javascript' src='@routes.Assets.versioned("systemjs.config.js")'></script>
+        @* our app is downloaded as individual javascript files by SystemJs after compilation by sbt-typescript*@
+        <script>
+             System.import('dataquality/assets/app/main.js').catch(function(err){ console.error(err); });
+        </script>
+    </head>
+    <body>
+        <app-root>
+                <div class="loader centered"></div>
+        </app-root>
+    </body>
+</html>
