@@ -1,0 +1,60 @@
+{
+  "_from": "@angular/flex-layout",
+  "_id": "@angular/flex-layout@2.0.0-beta.9",
+  "_inBundle": false,
+  "_integrity": "sha1-PlT4mOgF0LFCbRXmE520FdBO518=",
+  "_location": "/@angular/flex-layout",
+  "_phantomChildren": {},
+  "_requested": {
+    "type": "tag",
+    "registry": true,
+    "raw": "@angular/flex-layout",
+    "name": "@angular/flex-layout",
+    "escapedName": "@angular%2fflex-layout",
+    "scope": "@angular",
+    "rawSpec": "",
+    "saveSpec": null,
+    "fetchSpec": "latest"
+  },
+  "_requiredBy": [
+    "#USER",
+    "/"
+  ],
+  "_resolved": "https://registry.npmjs.org/@angular/flex-layout/-/flex-layout-2.0.0-beta.9.tgz",
+  "_shasum": "3e54f898e805d0b1426d15e6139db415d04ee75f",
+  "_spec": "@angular/flex-layout",
+  "_where": "/home/stefano/Sviluppo/Projects/DQ",
+  "bugs": {
+    "url": "https://github.com/angular/flex-layout/issues"
+  },
+  "bundleDependencies": false,
+  "dependencies": {
+    "tslib": "^1.7.1"
+  },
+  "deprecated": false,
+  "description": "Angular Flex-Layout",
+  "es2015": "./@angular/flex-layout.js",
+  "homepage": "https://github.com/angular/flex-layout#readme",
+  "keywords": [
+    "angular",
+    "flex-layout",
+    "flexbox css",
+    "media query",
+    "breakpoints",
+    "responsive"
+  ],
+  "license": "MIT",
+  "main": "./bundles/flex-layout.umd.js",
+  "module": "./@angular/flex-layout.es5.js",
+  "name": "@angular/flex-layout",
+  "peerDependencies": {
+    "@angular/core": "^4.0.0",
+    "@angular/common": "^4.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/angular/flex-layout.git"
+  },
+  "typings": "./flex-layout.d.ts",
+  "version": "2.0.0-beta.9"
+}

@@ -1,0 +1,42 @@
+.subtitle {
+  background: #2C95BE;
+  color: rgba(255,255,255,.87);
+  font-family: Roboto, Arial, sans-serif;
+  font-size: 100%;
+}
+
+.subtitle .search {
+  margin-left: 5%
+}
+
+.toolbar-metrics {
+  background: #2C95BE;
+  color: rgba(255,255,255,.87);
+}
+
+.buttonspace {
+  margin-right: 10px;
+}
+
+.mat-action-row  {
+  justify-content: flex-start;
+}
+
+.textfieldlong {
+  width: 400px;
+}
+
+.textarealong {
+  width: 400px;
+  height: 150px;
+}
+
+.formfieldspace {
+  margin-top: 10px;
+  margin-right: 10px;
+}
+
+.button-checks {
+  background-color: #51BAE0;
+  color: rgba(255,255,255,.87);
+}

@@ -1,0 +1,39 @@
+{
+  /* the configuration of the typescript compiler. See docs https://github.com/Microsoft/TypeScript/wiki/Compiler-Options
+  The settings outDir and rootDir are managed by sbt-typescript.
+  */
+  "compilerOptions": {
+    "target": "es5",
+    "module": "system",
+    "moduleResolution": "node",
+    /* the following two settings are required for angular2 annotations to work*/
+    "emitDecoratorMetadata": true,
+    "experimentalDecorators":true,
+    /* for reading your ts source while debugging from a browser */
+    "sourceMap": true,
+    "mapRoot": "/assets",
+    "sourceRoot": "/assets",
+    "rootDirs": ["app/assets","test/assets"],
+    "baseUrl": ".",
+    "paths": {
+      "*": [
+        "*",
+        "target/web/node-modules/main/webjars/*",
+        "target/web/node-modules/test/webjars/*",
+        "target/web/public/main/vendor/*"
+      ]
+    },
+    /* noImplicitAny when you want your typescript to be fully typed */
+    "strict":true,
+    "strictNullChecks":false, //doesn't work yet with @angular RC4
+    "outDir": "./target/ts",
+    "lib": ["es6", "dom"],
+    "typeRoots": ["target/web/public/main/vendor/@types","target/web/node-modules/main/webjars/@types","target/web/node-modules/test/webjars/@types"]
+  },
+  /* the information below is not used by sbt-typescript. but you can use it if you want to run tsc -p .*/
+  "exclude": [
+    "node_modules",
+    "project/target",
+    "target"
+  ]
+}

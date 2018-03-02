@@ -1,0 +1,71 @@
+<md-dialog-content>
+    <div fxLayout="column" fxLayout.gt-xs="row">
+        <md-accordion fxFlex style="margin-bottom: 50px;">
+                <md-toolbar class = "toolbar-metrics">
+                    <button md-icon-button (click)="addMetric('COMPOSED')">
+                        <i class="material-icons">add_circle</i>
+                    </button>
+                    <span >Composed</span>
+                        <md-form-field floatPlaceholder="never" class="search">
+                                <input mdInput placeholder="Search" [(ngModel)]="composedMetricSearch" (ngModelChange)="inputChange()">
+                                <button md-button *ngIf="composedMetricSearch" mdSuffix md-icon-button aria-label="Clear" (click)="clearSearch()">
+                                    <md-icon>close</md-icon>
+                                </button>
+                        </md-form-field>
+                </md-toolbar>
+
+                <p *ngIf="composedMetrics.length <= 0" class="textnotavailable">No Database available!</p>
+
+                <md-expansion-panel *ngFor="let metric of composedMetrics" (opened)="openMetric(metric)">
+                    <md-expansion-panel-header>
+                        <h3 class="accordion-first">
+                            {{metric.data.id}}
+                            <small class="accordion-second">formula {{metric.data.formula}}</small>
+                        </h3>
+                        <span *ngIf="metric.isNew"> &nbsp;(Draft) </span>
+                    </md-expansion-panel-header>
+                    <br />
+            
+                    <!-- common metric fields !-->
+                    <md-form-field class="formfieldspace">
+                        <input mdInput [disabled]="!metric.isNew" placeholder="Metric Id" value="{{metric.data.id}}" [(ngModel)]="metric.data.id">
+                    </md-form-field>
+                    <br />
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="Description" value="{{metric.data.description}}" [(ngModel)]="metric.data.description">
+                    </md-form-field>
+                    <br />
+                     <!-- composed metric fields !-->
+                      <!-- composed metric fields !-->
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="Metric Name" value="{{metric.data.name}}" [(ngModel)]="metric.data.name">
+                    </md-form-field>
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="Formula" value="{{metric.data.formula}}" [(ngModel)]="metric.data.formula">
+                    </md-form-field>
+                    <br />
+            
+                    <button mdLine md-raised-button (click)="openChecks()" *ngIf="!metric.isNew" class="formfieldspace button-checks">Show Checks</button>
+            
+                    <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+                        <ul class="errorValidation">
+                            <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+                        </ul>
+                    </span>
+                    <md-action-row>
+                        <button md-raised-button (click)="createMetric('COMPOSED',metric)" *ngIf="metric.isNew" class="buttonspace">Create</button>
+                        <button md-raised-button (click)="updateMetric('COMPOSED',metric)" *ngIf="!metric.isNew" class="buttonspace">Save</button>
+                        <button md-raised-button color="warn"    (click)="deleteMetric('COMPOSED',metric)" class="buttonspace">Delete</button>
+                    </md-action-row>
+                </md-expansion-panel>
+                <md-paginator  [length]="composedMetricElements"
+                [pageSize]="5"
+                (page)="pageChange($event,'COMPOSED')">
+                </md-paginator>
+        </md-accordion>
+        <app-checks fxFlex *ngIf= "showChecks" [metricId]="activeComposedMetricId" ></app-checks>
+    </div>
+</md-dialog-content>
+<md-dialog-actions>
+    <button id="button-close" md-raised-button (click)="closeComposedMetricsView()" class="formfieldspace">Close</button>
+</md-dialog-actions>

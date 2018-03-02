@@ -1,0 +1,47 @@
+.formfieldspace {
+    margin-top: 10px;
+    margin-right: 10px;
+  }
+
+.subtitle {
+    background: #51BAE0;
+    color: rgba(255,255,255,.87);
+}
+
+.subtitle .search {
+    margin-left: 5%
+  }
+
+.box {
+    max-width: 20%;
+}
+
+.buttonspace {
+    margin-right: 10px;
+}
+
+.mat-action-row  {
+    justify-content: flex-start;
+}
+
+.textfieldlong {
+    width: 400px;
+}
+
+.textarealong {
+    width: 400px;
+    height: 150px;
+}
+
+.button-checks {
+    background-color: #51BAE0;
+    color: rgba(255,255,255,.87);
+  }
+
+.mat-dialog-actions {
+    justify-content: flex-end;
+}
+
+.mat-dialog-content {
+    max-height: 80vh;
+}

@@ -1,0 +1,25 @@
+<div fxLayout="column" fxLayoutAlign="center center" id="config-container">
+    <div>
+        <md-card class="config-card">
+            <md-card-header>
+                <md-card-title>Upload Configuration File</md-card-title>
+            </md-card-header>
+            <md-card-content id="card-content">
+                <input #myInput type="file" ng2FileSelect [uploader]="uploader" placeholder="Upload "/>
+                
+                <button md-raised-button color="primary" (click)="uploader.uploadAll()" [disabled]="!uploader.getNotUploadedItems().length">
+                    <span class="glyphicon glyphicon-upload"></span> Upload
+                </button>
+
+                <button md-raised-button color="warn" (click)="clean()" [disabled]="!uploader.queue.length">
+                    <span class="glyphicon glyphicon-trash"></span> Remove
+                </button>
+            </md-card-content>
+            <md-card-actions id="card-action">
+                <button md-raised-button color="primary" (click)="downloadConfigFile()">Download conf</button>
+                <button md-raised-button color="warn" (click)="resetConfig()">Reset conf</button>
+                <a md-raised-button routerLink="/dataquality/editing">Start editing</a>
+            </md-card-actions>
+        </md-card>
+    </div>
+</div>

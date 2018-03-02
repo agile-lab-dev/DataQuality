@@ -1,0 +1,67 @@
+<md-accordion>
+    <md-toolbar color="primary">
+            <span>Targets</span>
+    </md-toolbar>
+    <md-expansion-panel *ngFor="let type of targetTypes">
+        <md-expansion-panel-header>
+                     {{type}}
+        </md-expansion-panel-header>
+        <md-accordion>
+                <md-toolbar color="primary">
+                    <button md-icon-button (click)="addTarget(type)">
+                        <i class="material-icons">add_circle</i>
+                    </button>
+                </md-toolbar>
+                <md-expansion-panel *ngFor="let target of (targets | targetTypeFilter:type)" (opened)="close()">
+                    <md-expansion-panel-header>
+                        {{target.data.id}}
+                        <span *ngIf="target.isNew">&nbsp;(Draft)</span>
+                    </md-expansion-panel-header>
+
+                    <!-- common target fields !-->
+                    <md-form-field class="formfieldspace">
+                        <input mdInput [disabled]="!target.isNew" placeholder="target Id" value="{{target.data.id}}" [(ngModel)]="target.data.id">
+                    </md-form-field>
+                    <br />
+                    <md-select placeholder="File Format" [(ngModel)]="target.data.fileFormat" class="formfieldspace">
+                        <md-option *ngFor="let faileFormat of fileFormats" [value]="faileFormat">
+                            {{ faileFormat }}
+                        </md-option>
+                    </md-select>
+                    <br />
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="File Path" value="{{target.data.path}}" [(ngModel)]="target.data.path">
+                    </md-form-field>
+                    <br />
+                    <md-select placeholder="Delimiter" [(ngModel)]="target.data.delimiter" class="formfieldspace">
+                        <md-option *ngFor="let delimiter of delimiters" [value]="delimiter">
+                            {{ delimiter }}
+                        </md-option>
+                    </md-select>
+                    <md-select placeholder="Save Mode" [(ngModel)]="target.data.savemode" class="formfieldspace">
+                        <md-option *ngFor="let savemode of savemodes" [value]="savemode">
+                            {{ savemode }}
+                        </md-option>
+                    </md-select>
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="Partitons" type="number" value="{{target.data.delimiter}}" [(ngModel)]="target.data.partitions">
+                    </md-form-field>
+                    <br />
+                    <button md-raised-button (click)="openMailsDialog(target)" class="formfieldspace">Mails ({{target.data.mails.length}})</button>
+                    <button md-raised-button *ngIf="type == 'SYSTEM'" (click)="openChecksDialog(target)" class="formfieldspace button-checks">Checks ({{target.data.checks.length}})</button>
+
+                    <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+                        <ul class="errorValidation">
+                            <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+                        </ul>
+                    </span>
+                    <md-action-row>
+                        <button md-raised-button (click)="createTarget(target)" *ngIf="target.isNew" class="buttonspace">Create</button>
+                        <button md-raised-button (click)="updateTarget(target)" *ngIf="!target.isNew" class="buttonspace">Save</button>
+                        <button md-raised-button color="warn" (click)="deleteTarget(target)" class="buttonspace">Delete</button>
+                    </md-action-row>
+                </md-expansion-panel>
+        </md-accordion>
+    </md-expansion-panel>
+    <button id="button-close" md-raised-button (click)="closeTargetsView()" class="formfieldspace">Close</button>
+</md-accordion>

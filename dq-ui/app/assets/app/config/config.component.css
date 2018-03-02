@@ -1,0 +1,18 @@
+#config-container {
+    margin-top: 10px;
+}
+
+.config-card {
+    width: 600px;
+}
+
+#card-content {
+    margin: 20px;
+    padding: 20px;
+}
+
+#card-action {
+    border-top-style: solid;
+    border-top-width: 1px;
+    border-top-color: #D3CFCF;
+}

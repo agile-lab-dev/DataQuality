@@ -1,0 +1,129 @@
+<h2 md-dialog-title>Database Connections</h2>
+<md-dialog-content>
+    <div fxLayout="column" fxLayout.gt-xs="row">
+        <md-accordion fxFlex style="margin-bottom: 50px;">
+                <md-toolbar color="primary">
+                    <button md-icon-button (click)="addDatabase()">
+                        <i class="material-icons">add_circle</i>
+                    </button>
+                    <span>Databases</span>
+                </md-toolbar>
+
+                <p *ngIf="databases.length <= 0" class="textnotavailable">No Database available!</p>
+
+                <md-expansion-panel *ngFor="let database of databases" (opened)="openDatabase(database)">
+                    <md-expansion-panel-header>
+                        {{database.data.id}}
+                        <span *ngIf="database.isNew">&nbsp;&nbsp;(Draft)</span>
+                    </md-expansion-panel-header>
+            
+                    <md-form-field class="formfieldspace">
+                            <input mdInput [disabled]="!database.isNew" placeholder="Databsae Id" value="{{database.data.id}}" [(ngModel)]="database.data.id">
+                    </md-form-field>
+                    <br />
+                    <md-select placeholder="Type" [(ngModel)]="database.data.subtype" class="formfieldspace">
+                            <md-option *ngFor="let databaseType of databaseTypes   " [value]="databaseType">
+                            {{databaseType}}
+                        </md-option>
+                    </md-select>
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="Host" value="{{database.data.host}}" [(ngModel)]="database.data.host">
+                    </md-form-field>
+                    <br />
+                    <md-form-field class="formfieldspace">
+                            <input mdInput placeholder="Port" value="{{database.data.port}}" [(ngModel)]="database.data.port">
+                    </md-form-field>
+                    <md-form-field class="formfieldspace">
+                            <input mdInput placeholder="Service" value="{{database.data.service}}" [(ngModel)]="database.data.service">
+                    </md-form-field>
+                    <br />
+                    <md-form-field class="formfieldspace">
+                            <input mdInput placeholder="Username" value="{{database.data.username}}" [(ngModel)]="database.data.username">
+                    </md-form-field>
+                    <md-form-field class="formfieldspace">
+                                <input mdInput placeholder="Password" type="password" value="{{database.data.password}}" [(ngModel)]="database.data.password">
+                    </md-form-field>
+                    <br />
+                    <button mdLine md-raised-button (click)="openChecks()" *ngIf="!database.isNew" class="formfieldspace" class="formfieldspace button-checks">Show Checks</button>
+
+                    <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+                        <ul class="errorValidation">
+                            <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+                        </ul>
+                    </span>
+                    <md-action-row>
+                        <button md-raised-button (click)="createDatabase(database)" *ngIf="database.isNew" class="buttonspace">Create</button>
+                        <button md-raised-button (click)="updateDatabase(database)" *ngIf="!database.isNew" class="buttonspace">Save</button>
+                        <button md-raised-button color="warn" (click)="deleteDatabase(database)" class="buttonspace">Delete</button>
+                    </md-action-row>
+                </md-expansion-panel>
+                <md-paginator [length]="databaseElements"
+                [pageSize]="5"
+                (page)="pageChange($event,'DATABASE')">
+                </md-paginator>
+        </md-accordion>
+        <md-accordion *ngIf="showChecks" fxFlex>
+                <md-toolbar class="subtitle">
+                    <button md-icon-button (click)="addCheck()">
+                        <i class="material-icons">add_circle</i>
+                    </button>
+                    <span >Database Checks</span>
+                </md-toolbar>
+                
+                <p *ngIf="sqlChecks.length <= 0" class="textnotavailable">No Checks available!</p>
+
+                <md-expansion-panel *ngFor="let check of sqlChecks">
+                    <md-expansion-panel-header>
+                        {{check.data.id}}
+                        <span *ngIf="check.isNew"> &nbsp;(Draft) </span>
+                    </md-expansion-panel-header>
+                                
+                    <!-- common checks fields !-->
+                    <md-form-field class="formfieldspace">
+                        <input mdInput [disabled]="!check.isNew" placeholder="check Id" value="{{check.data.id}}" [(ngModel)]="check.data.id">
+                    </md-form-field> 
+                                
+                    <!-- check sql fields !-->
+                                
+                    <md-select placeholder="Subtype" [(ngModel)]="check.data.subtype" class="formfieldspace">
+                        <md-option *ngFor="let checkType of checkTypes   " [value]="checkType">
+                            {{checkType}}
+                        </md-option>
+                    </md-select>
+                    <br />
+                                        
+                    <md-form-field class="formfieldspace">
+                        <input mdInput placeholder="Description" value="{{check.data.description}}" [(ngModel)]="check.data.description">
+                    </md-form-field>
+                    <br />
+
+                    <md-form-field class="formfieldspace">
+                            <input mdInput disabled placeholder="Database" value="{{check.data.database}}" [(ngModel)]="check.data.database">
+                    </md-form-field>
+                    <br />
+                                
+                    <button md-raised-button (click)="openSQLEditorDialog(check)" class="formfieldspace button-checks">Query</button>                    
+
+                    <span *ngIf="errorValidation.length > 0" class="formfieldspace">
+                        <ul class="errorValidation">
+                            <li *ngFor="let err of errorValidation">{{err.field}} - {{err.message}}</li>
+                        </ul>
+                    </span>
+                    <md-action-row>
+                        <button md-raised-button (click)="createCheck(check)" *ngIf="check.isNew" class="buttonspace">Create</button>
+                        <button md-raised-button (click)="updateCheck(check)" *ngIf="!check.isNew" class="buttonspace">Save</button>
+                        <button md-raised-button color="warn" (click)="deleteCheck(check)" class="buttonspace">Delete</button>
+                    </md-action-row>
+        
+                </md-expansion-panel>
+                <md-paginator [length]="sqlCheckElements"
+                [pageSize]="5"
+                (page)="pageChange($event,'CHECK')">
+                </md-paginator>
+                        
+        </md-accordion>
+    </div>
+</md-dialog-content>
+<md-dialog-actions>
+    <button id="button-close" md-raised-button (click)="closeDatabaseView()" class="formfieldspace">Close</button>
+</md-dialog-actions>

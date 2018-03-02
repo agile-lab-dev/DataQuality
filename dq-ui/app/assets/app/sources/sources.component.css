@@ -1,0 +1,40 @@
+.subtitle {
+  background: #0F6096;
+  color: rgba(255, 255, 255, .87);
+}
+
+.toolbar-sources {
+  background: #0F6096;
+  color: rgba(255, 255, 255, .87);
+}
+
+.box {
+  max-width: 20%;
+}
+
+.buttonspace {
+  margin-right: 10px;
+}
+
+.mat-action-row {
+  justify-content: flex-start;
+}
+
+.textfieldlong {
+  width: 200px;
+}
+
+.textarealong {
+  width: 200px;
+  height: 90px;
+}
+
+.formfieldspace {
+  margin-top: 10px;
+  margin-right: 10px;
+}
+
+.button-metrics {
+  background-color: #2C95BE;
+  color: rgba(255, 255, 255, .87);
+}

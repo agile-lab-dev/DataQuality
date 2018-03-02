@@ -1,273 +1,141 @@
-# Data Quality for BigData
----
-
-Table of contents
--------------
-
-- [Overview](#overview)
-- [Background](#background)
-- [Scenario](#scenario)
-- [Compnents](#components)
-- [Using DQ](#using-DQ)
-
----
-
-
-
-Overview
--------------
+# Agile Lab Data Quality
 
 DQ is a framework to build parallel and distributed quality checks on big data environments.
 It can be used to calculate metrics and perform checks to assure quality on structured or unstructured data.
 It relies entirely on Spark.
 
-Compared to typical data quality products, this framework performs quality checks at raw level.
-It doesn't leverage any kind of SQL abstraction like Hive or Impala because they perform type checks at runtime hiding bad formatted data.
-Hadoop is mainly unstructured data ( files ), so we think that quality checks must be performed at row level without typed abstractions.
-
-
-With DQ you are allowed to:
-- load eterogenous data from different sources (hdfs, DB etc.) and various formats (Avro, Parquet, CSV etc.)
-- select, define and perform metrics on DataFrame
-- compose and perform checks
-- evaluate quality and consistency on data, determined by constraints
-- save results on Hdfs, datastore etc.
-
 ---
 
+Data Quality framework has been developed by [Agile Lab](http://www.agilelab.it).
 
-Background
--------------
+Compared to typical data quality products, this framework performs quality checks at raw level.
+It doesn't leverage any kind of SQL abstraction like Hive or Impala because they perform type checks at runtime hiding bad formatted data.
+Hadoop is mainly unstructured data (files), so we think that quality checks must be performed at row level without typed abstractions.
+
+With DQ you are allowed to:
+- Load heterogeneous data from different sources (HDFS, DB etc.) and various formats (Avro, Parquet, CSV, etc.)
+- Apply SQL queries on Sources (powered with spark Dataframe API) 
+- Select, define and perform metrics on DataFrames
+- Compose and perform checks
+- Evaluate quality and consistency on data, determined by constraints.
+- Perform trend analysis, based on previous results.
+- Transform results in order to make reports that you like.
+- Save results on HDFS in multiple formats (csv, avro, parquet) or/and datastore etc.
+
+## Background
 
 Perform metrics and checks on huge data is a hard task. With DQ we want to build a flexible framework that allow to specify a formalism to make different metrics to calculate in parallel and one-pass application, and perform and store checks on data.
 We use Typesafe Configuration to set workflows and Spark to ingest and perform Data Quality applications based on it.
 
----
+## Architecture
 
+![Architecture](docs/diagrams/DQ2.png)
 
-Scenario
--------------
+The Data Quality project is divided into 2 main modules:
+- **Config engine**: Web application to help your write and validate DQ configuration files.
+- **Core engine**: Main module of DQ, which run the Spark Application, calculating everything defined in configuration file.
+ Can be ran locally on single machine or in client mode on cluster manager (YARN). Please, note that the distributed deployment is still under development.
 
-
-The project is divided into 6 core modules:
-
-- **Config-files**: typesafe configuration files that contains the logic of your data Quality applications: here you can specify sources to load, metrics to process on data, checks to evaluate and targets to save results.
-- **DQ-configs**: is the entry point of each applicaton, and provides a configuration parser and loader to run a data quality workflow from a specified configuration file.
-- **DQ-metrics**: metrics are formula that can be applied to a table or a column. For each workflow you can define a set of metrics to process in one-pass run.
-- **DQ-checks**: checks represent a list of calculated metrics. These objects are run in order to evaluate the quality of data.
-- **DQ-sources**: it provides loader for structured data and table from various database and filesystems. To save results of your application you can use **DQ-targets**
-- **DQ-apps**: consist of the main of your application, where Spark process the defined and parsed configuration workflow.
-
-
-**Distributed deployment**, is committed on Hadoop YARN (for Spark).
-Please note that the distributed deployment is still under development.
+Data Quality is using Typesafe configuration files in order to define the logic of your applications:
+ here you can specify sources to load, metrics to process on data, checks to evaluate, targets to save results and many more.
+List of entities to configure:
+- **Sources**: entry point to the application. Defines files and tables to process in future.
+- **Virtual sources**: defines pre-processing transformations of defined sources. Uses plain SQL queries (calculated in-memory via Spark SQL api).
+- **Metrics**: metrics are formula that can be applied to a table or a column. For each workflow you can define a set of metrics to process in one-pass run. Each metric return 'Double' value as the result (except the TOP_N metric).
+- **Composed metrics**: additional metrics made of other metric results. Can use both metrics and other composed metrics.
+- **Checks**: checks are control unit of the application, can be applied to current metric result in order to check if it fits defined constraint(greater/lesser than or equal to some constant value or other metric result). Returns "Boolean" values, which can be easily evaluated.
+- **Targets**: set of files and alarms to which will be passed results of previous modules in order to save or/and notify by email. 
+- **Postprocessing**: set of transformations to finalize any results and prepare reports.
 
 **Run on cluster**, is possible via scheduled period and range on dates.
 
----
+## Documentation
 
+You can find Data Quality documentation [here](docs).
+It is divided into several sections:
+- [Sources](docs/sources.md)
+- [Metrics](docs/metrics.md)
+- [Checks](docs/checks.md)
+- [Targets](docs/targets.md)
+- [Postprocessors](docs/postprocessors.md)
 
+You can improve it by sending pull requests to this repository.
 
-Architecture
--------------
+## Installation
 
-![Architecture](diagrams/DQ2.png)
+Data Quality is currently using following dependencies:
+- Scala 2.10(core)/2.11(ui)
+- Apache Spark 1.6
+- PostgreSQL 9.3 (works also with Oracle and SQLite)
 
----
+To be able to use all the features of Data Quality you'll need to setup a database
+- [How to setup a database](docs/installation/database-setup.md)
 
+All modules of DQ works independently.:
+- [DQ-CORE installation guide](docs/installation/core-setup.md)
+- [DQ-UI installation guide](docs/installation/ui-setup.md)
 
+## Examples
 
-Components
--------------
+There are some examples [here](docs/examples/examples.md), but here is one to get you started:
 
-### Metrics
+We have the famous USGS earthquake dataset and we want to know what is an average depth per year and 
+set a check if it's bigger than some constraint.
 
-- On Tables:
-    - columns
-    - records
-
-- On Columns:
-    - empty values
-    - null values
-    - unique values
-    - Min,max,sum,avg for numeric columns
-    - Min, max, avg lenght for string columns
-    - well formatted ( es. Date with formatter )
-    - string domain consistency
-
-- Composed metrics:
-    - derived from tables and columns
-
-
-### Checks
-
-Combinings Metrics you can achieve quality checks.
-
-Quality check categories:<br />
-
-**File Snapshot**<br />
-Evaluated on single-file data:
-- records bounds ( Min - Max )
-- Sum or Avg numeric values bounds ( Min - Max )
-- % empty values x column
-- % null values x column
-- % duplicated values x column ( to check a primary key, % duplicated == 0)
-- Unique values vs a specified domain
-- Schema match
-- String lenghts requirements
-
-**File Trend** (under development) <br />
-Comparison between metrics on a specific file today with same metrics in the past
-- record today - # record yestarday
-- record today – avg(# record) last month
-
-**Cross Files** (under development) <br />
-It will be possible to specify dependencies of each file, in order to check metrics on previous transformation steps
-- record file A - # record file B. File A is a dependency of file B
-- unique values on primary key of file A and # unique values on primary eky of file B 
-
-**Custom SQL** ( applicable only on JDBC targets)<br />
-It will be possible to configure specific queries to a target JDBC endpoint ( Oracle, Impala, Hive )
-Queries must return a single row with two column:
-- Query name
-- Test OK/Test KO
-
-**Cut-Off Time** (under development)<br />
-This check will monitor last change dates and times, compared with the configured ones.
-
----
-
-
-
-
-Using DQ
-------------
-
-DQ is written in Scala, and the build is managed with SBT.
-
-Before starting:
-- Install JDK
-- Install SBT
-- Install Git
-
-
-The steps to getting DQ up and running for development are pretty simple:
-
-- Clone this repository:
-
-    `git clone https://github.com/agile-lab-dev/DataQuality.git`
-
-- Start DQ. You can either run DQ in local or cluster mode:
-
-    - local: default setting
-    
-    - cluster: set isLocal = false calling makeSparkContext() in `DQ/utils/DQMainClass`
-
-- Run DQ. You can either run DQ via scheduled or provided mode (shell):
-
-    - `run.sh`, takes parameters from command line:
-        **-n**, Spark job name
-        **-c**, Path to configuration file
-        **-r**, Indicates the date at which the DataQuality checks will be performed
-        **-d**, Specifies whether the application is operating under debugging conditions
-        **-h**, Path to hadoop configuration
-    
-    - `scheduled_run.sh`: set isLocal = false calling makeSparkContext() in `DQ/utils/DQMainClass`
- 
----
-
-
-
-Define Data Quality workflow by configuration
-------------
-In order to build your application you need to define a config file where to list sources, metrics, checks and targets.
-Data Quality config example:
-      
+Let's start with the source! For this example we will you only one snapshot:
+```hocon
 Sources: [
-
-    {
-      id = "FIXEDFILE"
-      type = "HDFS"
-      path = ${INPUT_DIR}${INPUT_FILE_NAME}"{{YYYYMMDD}}",
-      fileType = "fixed",
-      fieldLengths = ["name:16", "id:32", "cap:5"]
+  {
+    id = "USGS_2000"
+    type = "HDFS"
+    path = "/PATH_TO_FILES/docs/examples/data/usgs/USGS_2000.csv"
+    delimiter = ","
+    header = true
+    fileType = "csv"
+  }
+]
+```
+Now we can calculate our metric (mean of depth):
+```hocon
+Metrics: [
+  {
+    id: "depth_avg"
+    name: "AVG_NUMBER"
+    type: "COLUMN"
+    description: "Average value of depth"
+    config: {
+      file: "USGS_2000",
+      columns: ["Depth"]
     }
-  ]
-
-
-  Metrics: [
-  
-    {
-      id: "2"
-      name: "STRING_IN_DOMAIN"
-      type: "COLUMN"
-      description: "determine number of values contained in this domain (string)"
-      config: {
-        file: "FIXEDFILE",
-        column: "name",
-        params:[{domainSet: "UNKNOWN"}]
-      }
+  }
+]
+```
+Finally, check if metric result is bigger than 50:
+```hocon
+Checks: [
+  {
+    id: "depth_avg_check"
+    type: "snapshot"
+    subtype: "GREATER_THAN"
+    description: "Checks is average depth is greather than 50"
+    config: {
+      metrics: ["depth_avg"]
+      params: {threshold: "50"}
     }
-  ]
+  }
+]
+```
+And we are done! Now we can run it locally or on cluster. Result will be stored in the database defined in 'application.conf'.
+This is just the beginning, next we can add more metrics, checks, preprocess/postprocess our sources and
+generate some reports. More information about it you can find [here](docs/examples/examples.md).
 
-  Checks: [
-  
-    {
-      type: "snapshot"
-      subtype: "EQUAL_TO"
-      name: "FIXED_CHECK"
-      description: "check for specific value assence in column (with threshold)"
-      config: {
-        metrics: ["2"]
-        params: [{threshold: "0"}]
-      }
-    },
-    {
-      type: "snapshot"
-      subtype: "GREATER_THAN"
-      name: "FIXED_CHECK"
-      description: "check for rows_number greather than threshold (row count comparison)"
-      config: {
-        metrics: ["1"]
-        params: [{threshold: "1000"}]
-      }
-    }
-  ]
+## Contributing
 
-  Targets: [
-  
-    {
-      type: "COLUMNAR-METRICS"
-      fileFormat: "csv"
-      ruleName: "AT_LEAST_ONE_ERROR",
-      config: {
-        path: ${OUTPUT_DIR}
-        delimiter: "|"
-        savemode: "append"
-      }
-    },
-    {
-      type: "FILE-METRICS",
-      fileFormat: "csv"
-      ruleName: "AT_LEAST_ONE_ERROR",
-      config: {
-        path: ${OUTPUT_DIR}
-        name: "FIXED-FILE-METRICS"
-        delimiter: "|"
-        savemode: "append"
-      }
-    },
-    {
-      type: "CHECKS"
-      fileFormat: "csv"
-      ruleName: "AT_LEAST_ONE_ERROR",
-      config: {
-        path: ${OUTPUT_DIR}
-        delimiter: "|"
-        savemode: "overwrite"
-      }
-    }
-  ]
+The main purpose of this repository is to continue to develop all modules of Data Quality, making it easier and faster to use.
+Development of Data Quality happens in the open on GitHub, and we are grateful to the community for contributing bugfixes and improvements.
 
-You can find configuration examples (workflows) under **resources**.  
+### License
+
+Data Quality is [GNU GPL](LICENSE) licensed.
+
 
