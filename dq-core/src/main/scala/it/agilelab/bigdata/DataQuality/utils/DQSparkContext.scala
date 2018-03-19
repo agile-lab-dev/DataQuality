@@ -19,7 +19,7 @@ trait DQSparkContext {
       .set("spark.kryoserializer.buffer.max", "128")
       .set("spark.sql.parquet.compression.codec", "snappy")
     if (settings.commandLineOpts.local) {
-      conf.setMaster("local[4]")
+      conf.setMaster("local[*]")
 
     }
     f(conf)

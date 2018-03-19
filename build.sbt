@@ -1,11 +1,14 @@
+import com.typesafe.sbt.packager.MappingsHelper.directory
 import sbt.GlobFilter
 import sbt.Keys.{logLevel, scalaVersion, test, updateOptions}
 import sbtassembly.AssemblyPlugin.autoImport.assemblyOption
+import src.main.scala.BuildEnvPlugin.autoImport.{BuildEnv, buildEnv}
+import src.main.scala.BuildIntegrationPlugin.autoImport.{IntegrationEnv, integrationEnv}
 
 name := "DataQuality-framework"
 
 lazy val commonSettings = Seq(
-  version := "1.0"
+  version := "2.0.1"
 )
 
 scalacOptions ++= Seq(
@@ -55,6 +58,8 @@ val core = (project in file("dq-core"))
       "org.apache.commons" % "commons-email" % "1.4",
       "org.scalatest" %% "scalatest" % "2.2.1" % "test"
     ),
+    unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/resources"),
+    excludeFilter in Compile in unmanagedResources := "*",
     unmanagedJars in Compile += file("dq-core/lib/ojdbc7.jar"),
     resolvers ++= Seq(
       "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
@@ -63,6 +68,21 @@ val core = (project in file("dq-core"))
     assemblyExcludedJars in assembly := (fullClasspath in assembly).value.filter(_.data.getName startsWith "spark-assembly"),
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = true),
     test in assembly := {},
+    mappings in Universal += {
+      val confFile = buildEnv.value match {
+        case BuildEnv.Dev => "path to application.conf"
+        case BuildEnv.Test => "path to application.conf"
+        case BuildEnv.Production => "path to application.conf"
+      }
+      ((resourceDirectory in Compile).value / confFile) -> "conf/application.conf"
+    },
+    mappings in Universal ++= {
+      val integrationFolder = integrationEnv.value match {
+        case IntegrationEnv.local => "path to integration directory"
+      }
+      directory((resourceDirectory in Compile).value / integrationFolder / "bin") ++
+        directory((resourceDirectory in Compile).value / integrationFolder / "conf")
+    },
     mappings in Universal <+= (assembly in Compile) map { jar =>
       jar -> ("lib/" + jar.getName)
     }
