@@ -2,7 +2,6 @@ package it.agilelab.bigdata.DataQuality.utils
 
 import java.util.Locale
 
-import com.typesafe.config.ConfigFactory
 import it.agilelab.bigdata.DataQuality.utils.io.LocalDBManager
 import org.apache.hadoop.fs.FileSystem
 import org.apache.log4j.{Level, Logger}
@@ -16,12 +15,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
 
   private def initLogger(): Unit = {
     Logger.getLogger("org").setLevel(Level.WARN)
-    Logger
-      .getLogger("org.apache.spark.scheduler.TaskSetManager")
-      .setLevel(Level.WARN)
-    Logger
-      .getLogger("org.apache.spark.scheduler.TaskSetManager")
-      .setLevel(Level.WARN)
+    Logger.getLogger("org.apache.spark.scheduler.TaskSetManager").setLevel(Level.WARN)
     Logger.getLogger("akka").setLevel(Level.OFF)
     Logger.getLogger("io.netty").setLevel(Level.OFF)
     Logger.getLogger("org.spark-project.jetty").setLevel(Level.OFF)
@@ -41,7 +35,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
                        sqlWriter: LocalDBManager,
                        settings: DQSettings): Boolean
 
-  def preMessage(task: String) = {
+  def preMessage(task: String): Unit = {
     log.warn(
       "************************************************************************")
     log.warn(s"               STARTING EXECUTION OF TASK $task")
@@ -49,7 +43,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
       "************************************************************************")
   }
 
-  def postMessage(task: String) = {
+  def postMessage(task: String): Unit = {
     log.warn(
       "************************************************************************")
     log.warn(s"               FINISHED EXECUTION OF TASK $task")
@@ -57,29 +51,23 @@ trait DQMainClass { this: DQSparkContext with Logging =>
       "************************************************************************")
   }
 
-  def main(args: Array[String]) = {
-
+  def main(args: Array[String]): Unit = {
     // set to avoid casting problems in metric result name generation
     Locale.setDefault(Locale.ENGLISH)
-
     initLogger()
 
-    DQcommandLineOptions.parser().parse(args, DQcommandLineOptions()) match {
-      case Some(dQcommandLineOptions) =>
+    DQCommandLineOptions.parser().parse(args, DQCommandLineOptions("","")) match {
+      case Some(commandLineOptions) =>
         // Load our own config values from the default location, application.conf
-        val conf = ConfigFactory.load()
-        val settings =
-          DQSettings(dQcommandLineOptions, conf.getConfig("dataquality"))
+        val settings = DQSettings(commandLineOptions)
 
-        log.info("APP_DIR: " + settings.appDir)
         log.info("Mailing mode: " + settings.mailingMode)
         settings.mailingConfig match {
           case Some(mconf) => log.info("With configuration: " + mconf.toString)
           case None        =>
         }
 
-        log.info(s"Creating SparkContext, SqlContext and FileSystem")
-        // initialize heare because they will be used in every run
+        log.info(s"Creating SparkContext, SqlContext and FileSystem...")
         val sparkContext = makeSparkContext(settings)
         val sqlContext = makeSqlContext(sparkContext)
         val fs = makeFileSystem(sparkContext)
@@ -97,11 +85,11 @@ trait DQMainClass { this: DQSparkContext with Logging =>
         localSqlWriter.closeConnection()
         sparkContext.stop()
 
-        log.info("Spark context terminated ... exiting")
+        log.info("Spark context terminated. Exiting...")
 
       case None =>
         log.error("WRONG PARAMS")
-        throw new Exception(" WRONG PARAMS")
+        throw new Exception("WRONG PARAMS")
 
     }
 
