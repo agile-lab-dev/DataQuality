@@ -7,12 +7,12 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import scala.collection.JavaConversions.asJavaCollection
 
 /**
-  * Created by Egor Makhov on 12/10/17.
+  * Created by Rocco Caruso on 12/10/17.
   */
 object VirtualSourceProcessor {
 
-  def getActualSources(initialVirutalSourcesMap: Map[FileId, VirtualFile],
-                       initialsourceMap: Map[String, Source])(
+  def getActualSources(initialVirtualSourcesMap: Map[FileId, VirtualFile],
+                       initialSourceMap: Map[String, Source])(
       implicit sqlContext: SQLContext,
       settings: DQSettings): Map[String, Source] = {
 
@@ -25,7 +25,7 @@ object VirtualSourceProcessor {
         "VIRTUAL SOURCES MAP SIZE " + virtualSourcesMap.size + " keys " + virtualSourcesMap.keySet
           .mkString("-"))
       log.info(
-        "ACTUAL SOURCES MAP SIZE " + actualSourcesMapAccumulator.size ++ " keys " + actualSourcesMapAccumulator.keySet
+        "ACTUAL SOURCES MAP SIZE " + actualSourcesMapAccumulator.size + " keys " + actualSourcesMapAccumulator.keySet
           .mkString("-"))
       if (virtualSourcesMap.isEmpty) {
         actualSourcesMapAccumulator
@@ -34,7 +34,7 @@ object VirtualSourceProcessor {
           virtualSourcesMap.filter {
             case (sourceId, conf: VirtualFile) =>
               val parentIds = conf.parentSourceIds
-              log.info(s" virutal source $sourceId   parerentIDS ${parentIds.mkString(
+              log.info(s"* virtual source $sourceId | parentIDS ${parentIds.mkString(
                 "-")} sources ${actualSourcesMapAccumulator.keySet.mkString("-")}")
               actualSourcesMapAccumulator.keySet.containsAll(parentIds)
           }
@@ -66,7 +66,7 @@ object VirtualSourceProcessor {
                                         sqlCode,
                                         keyfields,
                                         _) =>
-                  log.info("VIRUTAL JOIN " + sqlCode)
+                  log.info("VIRTUAL JOIN " + sqlCode)
                   val leftParent = parentSourceIds.head
                   val rightParent = parentSourceIds(1)
                   log.info("LEFT PARENT " + leftParent)
@@ -82,7 +82,7 @@ object VirtualSourceProcessor {
                   log.info(s"column left $colLeft")
                   log.info(s"column right $colRight")
                   val virtualSourceDF = sqlContext.sql(sqlCode)
-                  log.info("VIRUTAL JOIN" + virtualSourceDF.explain())
+                  log.info("VIRTUAL JOIN" + virtualSourceDF.explain())
 
                   Source(vid,
                          settings.refDateString,
@@ -95,7 +95,7 @@ object VirtualSourceProcessor {
                                      joinType,
                                      keyfields,
                                      _) =>
-                  log.info("VIRUTAL JOIN " + joiningColumns.mkString("-"))
+                  log.info("VIRTUAL JOIN " + joiningColumns.mkString("-"))
 
                   val leftParent = parentSourceIds.head
                   val rightParent = parentSourceIds(1)
@@ -132,7 +132,7 @@ object VirtualSourceProcessor {
                   val virtualSourceDF =
                     dfLeftRenamed.join(dfRightRenamed, joiningColumns, joinType)
 
-                  log.info("VIRUTAL JOIN" + virtualSourceDF.explain())
+                  log.info("VIRTUAL JOIN" + virtualSourceDF.explain())
 
                   Source(vid,
                          settings.refDateString,
@@ -143,23 +143,23 @@ object VirtualSourceProcessor {
           }
           .map(s => (s.id, s))
           .toMap
-        val virutalSourcesToProcess = virtualSourcesMap -- firstLevelVirtualSources.keySet
+        val virtualSourcesToProcess = virtualSourcesMap -- firstLevelVirtualSources.keySet
 
         val processed = firstLevelVirtualSources.size
 
         val newActualSources = actualSourcesMapAccumulator ++ otherSources
         if (otherSources.isEmpty) {
-          log.error("SOMETHING WRONG ")
+          log.error("SOMETHING WRONG")
           throw new Exception(
-            s"processed $processed : ${firstLevelVirtualSources.keySet.mkString("-")} but haed only  addedSize ")
+            s"processed $processed : ${firstLevelVirtualSources.keySet.mkString("-")} but head only addedSize")
         }
-        loop(virutalSourcesToProcess, newActualSources)
+        loop(virtualSourcesToProcess, newActualSources)
 
       }
 
     }
 
-    loop(initialVirutalSourcesMap, initialsourceMap)
+    loop(initialVirtualSourcesMap, initialSourceMap)
   }
 
 }
