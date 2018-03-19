@@ -39,9 +39,7 @@ val core = (project in file("dq-core"))
       "org.apache.spark" %% "spark-core" % "1.6.0",
       "org.apache.spark" %% "spark-sql" % "1.6.0",
       "org.apache.spark" %% "spark-hive" % "1.6.0",
-
       "com.databricks" %% "spark-avro" % "2.0.1",
-      "org.scalatest" %% "scalatest" % "2.2.1" % "test",
       "com.databricks" %% "spark-csv" % "1.5.0",
       "org.apache.commons" % "commons-lang3" % "3.0",
       "joda-time" % "joda-time" % "2.9.9",
@@ -54,7 +52,8 @@ val core = (project in file("dq-core"))
       "org.postgresql" % "postgresql" % "42.1.1",
       //  "postgresql" % "postgresql" % "9.3-1102.jdbc41",
       "com.twitter" %% "algebird-core" % "0.13.0",
-      "org.apache.commons" % "commons-email" % "1.4"
+      "org.apache.commons" % "commons-email" % "1.4",
+      "org.scalatest" %% "scalatest" % "2.2.1" % "test"
     ),
     unmanagedJars in Compile += file("dq-core/lib/ojdbc7.jar"),
     resolvers ++= Seq(
