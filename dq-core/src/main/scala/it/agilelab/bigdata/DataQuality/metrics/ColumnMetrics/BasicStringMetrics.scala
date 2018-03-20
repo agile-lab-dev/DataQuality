@@ -2,7 +2,11 @@ package it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics
 
 import it.agilelab.bigdata.DataQuality.metrics.CalculatorStatus.CalculatorStatus
 import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.ParamMap
-import it.agilelab.bigdata.DataQuality.metrics.{CalculatorStatus, MetricCalculator, StatusableCalculator}
+import it.agilelab.bigdata.DataQuality.metrics.{
+  CalculatorStatus,
+  MetricCalculator,
+  StatusableCalculator
+}
 import it.agilelab.bigdata.DataQuality.utils.{getParametrizedMetricTail, _}
 import org.joda.time.format.DateTimeFormat
 
@@ -25,7 +29,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "DISTINCT_VALUES"
     */
-  case class UniqueValuesMatricCalculator(uniqueValues: Set[Any])
+  case class UniqueValuesMetricCalculator(uniqueValues: Set[Any])
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -34,7 +38,7 @@ object BasicStringMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToString(values.head) match {
-        case Some(v) => UniqueValuesMatricCalculator(uniqueValues + v)
+        case Some(v) => UniqueValuesMetricCalculator(uniqueValues + v)
         case None    => this
       }
     }
@@ -43,11 +47,36 @@ object BasicStringMetrics {
       Map("DISTINCT_VALUES" -> (uniqueValues.size.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      UniqueValuesMatricCalculator(
+      UniqueValuesMetricCalculator(
         this.uniqueValues ++ m2
-          .asInstanceOf[UniqueValuesMatricCalculator]
+          .asInstanceOf[UniqueValuesMetricCalculator]
           .uniqueValues)
 
+  }
+
+  case class RegexValuesMetricCalculator(cnt: Int, paramMap: Map[String, Any])
+      extends MetricCalculator {
+
+    private val regex: String = paramMap("regex").toString
+
+    def this(paramMap: Map[String, Any]) {
+      this(0, Set.empty[Any])
+    }
+
+    override def increment(values: Seq[Any]): MetricCalculator = {
+      tryToString(values.head) match {
+        case Some(x) if x.matches(regex) => this.copy(cnt + 1)
+        case _                           => this
+      }
+    }
+
+    override def result(): Map[String, (Double, Option[String])] =
+      Map("REGEX_VALUES" -> (cnt.toDouble, None))
+
+    override def merge(m2: MetricCalculator): MetricCalculator =
+      RegexValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[RegexValuesMetricCalculator].cnt,
+        paramMap)
   }
 
   /**
@@ -57,7 +86,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "NULL_VALUES"
     */
-  case class NullValuesMatricCalculator(cnt: Int,
+  case class NullValuesMetricCalculator(cnt: Int,
                                         protected val status: CalculatorStatus =
                                           CalculatorStatus.OK,
                                         protected val failCount: Int = 0)
@@ -69,7 +98,7 @@ object BasicStringMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       if (values.head == null) {
-        NullValuesMatricCalculator(cnt + 1, CalculatorStatus.OK, this.failCount)
+        NullValuesMetricCalculator(cnt + 1, CalculatorStatus.OK, this.failCount)
       } else copyWithState(CalculatorStatus.FAILED)
     }
 
@@ -77,9 +106,9 @@ object BasicStringMetrics {
       Map("NULL_VALUES" -> (cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator = {
-      val m2Casted = m2.asInstanceOf[NullValuesMatricCalculator]
-      NullValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[NullValuesMatricCalculator].cnt,
+      val m2Casted = m2.asInstanceOf[NullValuesMetricCalculator]
+      NullValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[NullValuesMetricCalculator].cnt,
         this.status,
         this.getFailCounter + m2Casted.getFailCounter)
     }
@@ -98,7 +127,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "EMPTY_VALUES"
     */
-  case class EmptyStringValuesMatricCalculator(cnt: Int)
+  case class EmptyStringValuesMetricCalculator(cnt: Int)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -106,7 +135,7 @@ object BasicStringMetrics {
     }
 
     override def increment(values: Seq[Any]): MetricCalculator = {
-      EmptyStringValuesMatricCalculator(
+      EmptyStringValuesMetricCalculator(
         cnt + (if (values.head
                      .isInstanceOf[String] && values.head.toString == "") 1
                else 0))
@@ -116,8 +145,8 @@ object BasicStringMetrics {
       Map("EMPTY_VALUES" -> (cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      EmptyStringValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[EmptyStringValuesMatricCalculator].cnt)
+      EmptyStringValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[EmptyStringValuesMetricCalculator].cnt)
 
   }
 
@@ -128,7 +157,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "MIN_STRING"
     */
-  case class MinStringValueMatricCalculator(strl: Int)
+  case class MinStringValueMetricCalculator(strl: Int)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -136,7 +165,7 @@ object BasicStringMetrics {
     }
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToString(values.head) match {
-        case Some(v) => MinStringValueMatricCalculator(Math.min(v.length, strl))
+        case Some(v) => MinStringValueMetricCalculator(Math.min(v.length, strl))
         case None    => this
       }
     }
@@ -145,9 +174,9 @@ object BasicStringMetrics {
       Map("MIN_STRING" -> (strl.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      MinStringValueMatricCalculator(
+      MinStringValueMetricCalculator(
         Math.min(this.strl,
-                 m2.asInstanceOf[MinStringValueMatricCalculator].strl))
+                 m2.asInstanceOf[MinStringValueMetricCalculator].strl))
 
   }
 
@@ -158,7 +187,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "MAX_STRING"
     */
-  case class MaxStringValueMatricCalculator(strl: Double)
+  case class MaxStringValueMetricCalculator(strl: Double)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -167,7 +196,7 @@ object BasicStringMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToString(values.head) match {
-        case Some(v) => MaxStringValueMatricCalculator(Math.max(v.length, strl))
+        case Some(v) => MaxStringValueMetricCalculator(Math.max(v.length, strl))
         case None    => this
       }
     }
@@ -176,9 +205,9 @@ object BasicStringMetrics {
       Map("MAX_STRING" -> (strl, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      MaxStringValueMatricCalculator(
+      MaxStringValueMetricCalculator(
         Math.max(this.strl,
-                 m2.asInstanceOf[MaxStringValueMatricCalculator].strl))
+                 m2.asInstanceOf[MaxStringValueMetricCalculator].strl))
 
   }
 
@@ -190,7 +219,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "AVG_STRING"
     */
-  case class AvgStringValueMatricCalculator(sum: Double, cnt: Int)
+  case class AvgStringValueMetricCalculator(sum: Double, cnt: Int)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -199,7 +228,7 @@ object BasicStringMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToString(values.head) match {
-        case Some(v) => AvgStringValueMatricCalculator(sum + v.length, cnt + 1)
+        case Some(v) => AvgStringValueMetricCalculator(sum + v.length, cnt + 1)
         case None    => this
       }
     }
@@ -208,8 +237,8 @@ object BasicStringMetrics {
       Map("AVG_STRING" -> (sum / cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator = {
-      val cm2 = m2.asInstanceOf[AvgStringValueMatricCalculator]
-      AvgStringValueMatricCalculator(
+      val cm2 = m2.asInstanceOf[AvgStringValueMetricCalculator]
+      AvgStringValueMetricCalculator(
         this.sum + cm2.sum,
         this.cnt + cm2.cnt
       )
@@ -226,7 +255,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "FORMATTED_DATE"
     */
-  case class DateFormattedValuesMatricCalculator(cnt: Double,
+  case class DateFormattedValuesMetricCalculator(cnt: Double,
                                                  paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -238,7 +267,7 @@ object BasicStringMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       if (checkDate(values.head, formatDate))
-        DateFormattedValuesMatricCalculator(cnt + 1, paramMap)
+        DateFormattedValuesMetricCalculator(cnt + 1, paramMap)
       else this
     }
 
@@ -246,8 +275,8 @@ object BasicStringMetrics {
       Map("FORMATTED_DATE" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      DateFormattedValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[DateFormattedValuesMatricCalculator].cnt,
+      DateFormattedValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[DateFormattedValuesMetricCalculator].cnt,
         paramMap)
 
     private def checkDate(value: Any, dateFormat: String) = {
@@ -269,7 +298,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "FORMATTED_STRING"
     */
-  case class StringFormattedValuesMatricCalculator(cnt: Double,
+  case class StringFormattedValuesMetricCalculator(cnt: Double,
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -283,7 +312,7 @@ object BasicStringMetrics {
       tryToString(values.head) match {
         case Some(v) =>
           if (v.length <= length)
-            StringFormattedValuesMatricCalculator(cnt + 1, paramMap)
+            StringFormattedValuesMetricCalculator(cnt + 1, paramMap)
           else this
         case None => this
       }
@@ -294,8 +323,8 @@ object BasicStringMetrics {
         "FORMATTED_STRING" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      StringFormattedValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[StringFormattedValuesMatricCalculator].cnt,
+      StringFormattedValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[StringFormattedValuesMetricCalculator].cnt,
         paramMap)
 
   }
@@ -309,7 +338,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "STRING_IN_DOMAIN"
     */
-  case class StringInDomainValuesMatricCalculator(cnt: Double,
+  case class StringInDomainValuesMetricCalculator(cnt: Double,
                                                   paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -323,7 +352,7 @@ object BasicStringMetrics {
       tryToString(values.head) match {
         case Some(v) =>
           if (values.contains(v))
-            StringInDomainValuesMatricCalculator(cnt + 1, paramMap)
+            StringInDomainValuesMetricCalculator(cnt + 1, paramMap)
           else this
         case None => this
       }
@@ -334,8 +363,8 @@ object BasicStringMetrics {
         "STRING_IN_DOMAIN" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      StringInDomainValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[StringInDomainValuesMatricCalculator].cnt,
+      StringInDomainValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[StringInDomainValuesMetricCalculator].cnt,
         paramMap)
   }
 
@@ -348,7 +377,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "STRING_OUT_DOMAIN"
     */
-  case class StringOutDomainValuesMatricCalculator(cnt: Double,
+  case class StringOutDomainValuesMetricCalculator(cnt: Double,
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -363,7 +392,7 @@ object BasicStringMetrics {
       tryToString(values.head) match {
         case Some(v) =>
           if (values.contains(v)) this
-          else StringOutDomainValuesMatricCalculator(cnt + 1, paramMap)
+          else StringOutDomainValuesMetricCalculator(cnt + 1, paramMap)
         case None => this
       }
     }
@@ -373,8 +402,8 @@ object BasicStringMetrics {
         "STRING_OUT_DOMAIN" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      StringOutDomainValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[StringOutDomainValuesMatricCalculator].cnt,
+      StringOutDomainValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[StringOutDomainValuesMetricCalculator].cnt,
         paramMap)
 
   }
@@ -388,7 +417,7 @@ object BasicStringMetrics {
     * @return result map with keys:
     *   "STRING_VALUES"
     */
-  case class StringValuesMatricCalculator(cnt: Int, paramMap: ParamMap)
+  case class StringValuesMetricCalculator(cnt: Int, paramMap: ParamMap)
       extends MetricCalculator {
 
     private val lvalue: String = paramMap("compareValue").toString
@@ -398,7 +427,7 @@ object BasicStringMetrics {
     }
 
     override def increment(values: Seq[Any]): MetricCalculator = {
-      StringValuesMatricCalculator(cnt + (if (values.head == lvalue) 1 else 0),
+      StringValuesMetricCalculator(cnt + (if (values.head == lvalue) 1 else 0),
                                    paramMap)
     }
 
@@ -407,8 +436,8 @@ object BasicStringMetrics {
         "STRING_VALUES" + getParametrizedMetricTail(paramMap) -> (cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      StringValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[StringValuesMatricCalculator].cnt,
+      StringValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[StringValuesMetricCalculator].cnt,
         paramMap)
 
   }
