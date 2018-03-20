@@ -135,27 +135,28 @@ object SourceProcessor extends Logging {
     // init column metric calculators
     val columnMetricGroupMap =
       Map(
-        "DISTINCT_VALUES" -> classOf[UniqueValuesMatricCalculator],
+        "DISTINCT_VALUES" -> classOf[UniqueValuesMetricCalculator],
         "APPROXIMATE_DISTINCT_VALUES" -> classOf[HyperLogLogMetricCalculator],
-        "NULL_VALUES" -> classOf[NullValuesMatricCalculator],
-        "EMPTY_VALUES" -> classOf[EmptyStringValuesMatricCalculator],
+        "NULL_VALUES" -> classOf[NullValuesMetricCalculator],
+        "EMPTY_VALUES" -> classOf[EmptyStringValuesMetricCalculator],
         "MIN_NUMBER" -> classOf[MinNumericValueMatricCalculator],
         "MAX_NUMBER" -> classOf[MaxNumericValueMatricCalculator],
         "SUM_NUMBER" -> classOf[SumNumericValueMatricCalculator],
         "AVG_NUMBER" -> classOf[StdAvgNumericValueCalculator],
         "STD_NUMBER" -> classOf[StdAvgNumericValueCalculator],
-        "MIN_STRING" -> classOf[MinStringValueMatricCalculator],
-        "MAX_STRING" -> classOf[MaxStringValueMatricCalculator],
-        "AVG_STRING" -> classOf[AvgStringValueMatricCalculator],
-        "FORMATTED_DATE" -> classOf[DateFormattedValuesMatricCalculator],
+        "MIN_STRING" -> classOf[MinStringValueMetricCalculator],
+        "MAX_STRING" -> classOf[MaxStringValueMetricCalculator],
+        "AVG_STRING" -> classOf[AvgStringValueMetricCalculator],
+        "FORMATTED_DATE" -> classOf[DateFormattedValuesMetricCalculator],
         "FORMATTED_NUMBER" -> classOf[NumberFormattedValuesMatricCalculator],
-        "FORMATTED_STRING" -> classOf[StringFormattedValuesMatricCalculator],
+        "FORMATTED_STRING" -> classOf[StringFormattedValuesMetricCalculator],
         "CASTED_NUMBER" -> classOf[NumberCastValuesMatricCalculator],
         "NUMBER_IN_DOMAIN" -> classOf[NumberInDomainValuesMatricCalculator],
         "NUMBER_OUT_DOMAIN" -> classOf[NumberOutDomainValuesMatricCalculator],
-        "STRING_IN_DOMAIN" -> classOf[StringInDomainValuesMatricCalculator],
-        "STRING_OUT_DOMAIN" -> classOf[StringOutDomainValuesMatricCalculator],
-        "STRING_VALUES" -> classOf[StringValuesMatricCalculator],
+        "STRING_IN_DOMAIN" -> classOf[StringInDomainValuesMetricCalculator],
+        "STRING_OUT_DOMAIN" -> classOf[StringOutDomainValuesMetricCalculator],
+        "STRING_VALUES" -> classOf[StringValuesMetricCalculator],
+        "REGEX_VALUES" -> classOf[RegexValuesMetricCalculator],
         "NUMBER_VALUES" -> classOf[NumberValuesMatricCalculator],
         "MEDIAN_VALUE" -> classOf[TDigestMetricCalculator],
         "FIRST_QUANTILE" -> classOf[TDigestMetricCalculator],
@@ -189,9 +190,9 @@ object SourceProcessor extends Logging {
 
     val columnsIndexes: Map[String, Int] =
       df.schema.fieldNames.map(s => s -> df.schema.fieldIndex(s)).toMap
-    val sourceKeyIds: Seq[Int] = sourceKeyFields.map(i => columnsIndexes(i))
+    val sourceKeyIds: Seq[Int] = sourceKeyFields.flatMap(i => columnsIndexes.get(i))
     log.info(s"KEY FIELDS: [${sourceKeyFields.mkString(",")}]")
-    if (sourceKeyIds.size != sourceKeyIds.size)
+    if (sourceKeyIds.size != sourceKeyFields.size)
       log.warn("Some of key fields were not found! Please, check them.")
 
     val dumpSize = settings.errorDumpSize
