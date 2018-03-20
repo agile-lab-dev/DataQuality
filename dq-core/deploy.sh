@@ -1,41 +1,37 @@
 #!/usr/bin/env bash
-# TODO: Add credentials
-REMOTE_HOST=
-REMOTE_USERNAME=
-BUILD_PREDICATE=
 
-REMOTE_ROOT_DIR=
+# $1 - build environment
+# $2 - integration project: ...
+# todo: add your credentials
+case $1 in
+    dev)
+        REMOTE_HOST=
+        REMOTE_USERNAME=
+        ;;
+    test)
+        REMOTE_HOST=
+        REMOTE_USERNAME=
+        ;;
+    *)
+        echo "Unknown environment! Please, select from: stage, test!"
+        exit 1
+        ;;
+esac
 
-echo 'DELETING PRESENT FILE...'
-rm -f ./target/scala-2.10/*.jar 2> /dev/null
-rm -f ./target/universal/* 2> /dev/null
+### TEST PARAMS
+REMOTE_ROOT_DIR=/hdp_spool/$REMOTE_USERNAME/dataquality-${2}
 
+echo 'DELETING PRESENT FILE'
+rm -f ./dq-core/target/scala-2.10/*.jar 2> /dev/null
+rm -f ./dq-core/target/universal/* 2> /dev/null
 echo 'DONE!'
 
 echo 'BUILDING ASSEMBLY...'
-
-#sbt assembly
-sbt universal:packageBin
-
-if [[ $? -ne 0 ]] ; then
-    exit 1
-fi
-
+sbt -Denv=$1 -Dintegration=$2 "project core" universal:packageBin
 echo 'DONE!'
 
-echo 'GENERATING GIT VERSION...'
-
-rm -f ./target/scala-2.10/git_version.info 2> /dev/null
-printf "commit: " > ./target/scala-2.10/git_version.info
-git rev-parse HEAD >> ./target/scala-2.10/git_version.info
-printf "descr: " >> ./target/scala-2.10/git_version.info
-git describe --long >> ./target/scala-2.10/git_version.info
-printf "status: " >> ./target/scala-2.10/git_version.info
-git status >> ./target/scala-2.10/git_version.info
-
 echo 'UPLOADING FILES...'
-
-scp  target/universal/*.zip $REMOTE_USERNAME@$REMOTE_HOST:$REMOTE_ROOT_DIR
+scp  dq-core/target/universal/*.zip $REMOTE_USERNAME@$REMOTE_HOST:$REMOTE_ROOT_DIR
 
 echo "############################################# "
 echo "#   _____   ____  _   _ ______   _   _   _  # "
@@ -46,5 +42,3 @@ echo "#  | |__| | |__| | |\  | |____  |_| |_| |_| # "
 echo "#  |_____/ \____/|_| \_|______| (_) (_) (_) # "
 echo "#                                           # "
 echo "############################################# "
-
-echo SHA256: `sha256sum target/scala-2.10/*.jar`
