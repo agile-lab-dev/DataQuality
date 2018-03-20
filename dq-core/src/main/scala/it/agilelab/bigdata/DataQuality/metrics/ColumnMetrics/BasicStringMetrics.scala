@@ -60,7 +60,7 @@ object BasicStringMetrics {
     private val regex: String = paramMap("regex").toString
 
     def this(paramMap: Map[String, Any]) {
-      this(0, Set.empty[Any])
+      this(0, paramMap)
     }
 
     override def increment(values: Seq[Any]): MetricCalculator = {
@@ -342,7 +342,7 @@ object BasicStringMetrics {
                                                   paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val values = paramMap("domainSet").asInstanceOf[Set[String]]
+    private val domain = paramMap("domainSet").asInstanceOf[Set[String]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
@@ -351,7 +351,7 @@ object BasicStringMetrics {
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToString(values.head) match {
         case Some(v) =>
-          if (values.contains(v))
+          if (domain.contains(v))
             StringInDomainValuesMetricCalculator(cnt + 1, paramMap)
           else this
         case None => this
@@ -381,8 +381,7 @@ object BasicStringMetrics {
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val values: Set[String] = paramMap("domainSet")
-      .asInstanceOf[Set[String]]
+    private val domain: Set[String] = paramMap("domainSet").asInstanceOf[Set[String]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
@@ -391,7 +390,7 @@ object BasicStringMetrics {
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToString(values.head) match {
         case Some(v) =>
-          if (values.contains(v)) this
+          if (domain.contains(v)) this
           else StringOutDomainValuesMetricCalculator(cnt + 1, paramMap)
         case None => this
       }
