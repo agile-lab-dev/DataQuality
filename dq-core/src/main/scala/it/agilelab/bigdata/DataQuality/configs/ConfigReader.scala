@@ -23,26 +23,6 @@ import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.util.Try
 
-object JoinEnum extends Enumeration with Serializable {
-  type JoinEnumType = Value
-  val inner, outer,  full,fullouter,leftouter,left,rightouter,right,leftsemi,leftanti,cross = Value
-
-  /**
-    * 'inner'
-    * 'outer'
-    * 'full'
-    * 'fullouter'
-    * 'leftouter'
-    * 'left'
-    * 'rightouter'
-    * 'right'
-    * 'leftsemi'
-    * 'leftanti'
-    * 'cross'
-    */
-}
-
-
 class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, settings:DQSettings) extends Logging {
 
   /**
@@ -361,7 +341,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
                 else throw MissingParameterInException(subtype)
               case x => throw IllegalParameterException(x)
             }
-          case "TREND" => {
+          case "TREND" =>
             val metrics = intConfig.getStringList("metrics")
             val id = Try {
               outerConf.getString("id")
@@ -416,7 +396,6 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
                 else throw MissingParameterInException(subtype)
               case x => throw IllegalParameterException(x)
             }
-          }
           case "SQL" => List.empty
           case x => throw IllegalParameterException(x)
         }
@@ -479,7 +458,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
   /**
     * Processes parameter sub-configuration
     * Made to prevent unexpected parameters and their values
-    * @param ccf parameter configuraton
+    * @param ccf parameter configuration
     * @return mapped parameter
     */
   private def getParams(ccf: Config): Map[String, Any] = {
@@ -506,8 +485,9 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
             case "startDate" => entry.getValue.unwrapped().toString
             case "compRule" => entry.getValue.unwrapped().toString
             case "dateFormat" => entry.getValue.unwrapped().toString
+            case "regex" => entry.getValue.unwrapped().toString
             case x =>
-              log.warn(s"${key.toUpperCase} is an unexpected parameters from config!")
+              log.error(s"${key.toUpperCase} is an unexpected parameters from config!")
               throw IllegalParameterException(x)
           }
         } yield (key, value)).toMap

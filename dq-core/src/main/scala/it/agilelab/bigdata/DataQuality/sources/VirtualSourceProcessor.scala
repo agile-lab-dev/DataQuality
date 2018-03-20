@@ -9,6 +9,26 @@ import scala.collection.JavaConversions.asJavaCollection
 /**
   * Created by Rocco Caruso on 12/10/17.
   */
+
+object JoinEnum extends Enumeration with Serializable {
+  type JoinEnumType = Value
+  val inner, outer, full, fullouter, leftouter, left, rightouter, right, leftsemi, leftanti, cross = Value
+
+  /**
+    * 'inner'
+    * 'outer'
+    * 'full'
+    * 'fullouter'
+    * 'leftouter'
+    * 'left'
+    * 'rightouter'
+    * 'right'
+    * 'leftsemi'
+    * 'leftanti'
+    * 'cross'
+    */
+}
+
 object VirtualSourceProcessor {
 
   def getActualSources(initialVirtualSourcesMap: Map[FileId, VirtualFile],
