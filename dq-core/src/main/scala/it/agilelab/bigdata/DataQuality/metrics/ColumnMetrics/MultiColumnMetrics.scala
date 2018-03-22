@@ -2,8 +2,17 @@ package it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics
 
 import it.agilelab.bigdata.DataQuality.metrics.CalculatorStatus.CalculatorStatus
 import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
-import it.agilelab.bigdata.DataQuality.metrics.{CalculatorStatus, MetricCalculator, StatusableCalculator}
-import it.agilelab.bigdata.DataQuality.utils.{Logging, getParametrizedMetricTail, tryToString}
+import it.agilelab.bigdata.DataQuality.metrics.{
+  CalculatorStatus,
+  MetricCalculator,
+  StatusableCalculator
+}
+import it.agilelab.bigdata.DataQuality.utils.{
+  Logging,
+  getParametrizedMetricTail,
+  tryToString,
+  tryToDouble
+}
 import org.apache.commons.lang3.StringUtils
 import org.joda.time.Days
 import org.joda.time.format.DateTimeFormat
@@ -11,6 +20,48 @@ import org.joda.time.format.DateTimeFormat
 import scala.util.{Success, Try}
 
 object MultiColumnMetrics extends Logging {
+
+  case class CovarianceMetricCalculator(
+      lMean: Double,
+      rMean: Double,
+      coMoment: Double,
+      n: Long
+  ) extends MetricCalculator {
+
+    def this(paramMap: Map[String, Any]) {
+      this(0, 0, 0, 0)
+    }
+
+    override def increment(values: Seq[Any]): MetricCalculator = {
+      val l: Double = tryToDouble(values.head).get
+      val r: Double = tryToDouble(values(1)).get
+
+      val newN = n + 1
+      val lm = lMean + (l - lMean) / newN
+      val rm = rMean + (r - rMean) / newN
+      val cm = coMoment + (l - lMean) * (r - rm)
+
+      CovarianceMetricCalculator(lm, rm, cm, newN)
+    }
+
+    override def merge(m2: MetricCalculator): MetricCalculator = {
+      val that: CovarianceMetricCalculator =
+        m2.asInstanceOf[CovarianceMetricCalculator]
+      CovarianceMetricCalculator(
+        (this.lMean * this.n + that.lMean * that.n) / (this.n + that.n),
+        (this.rMean * this.n + that.rMean * that.n) / (this.n + that.n),
+        this.coMoment + that.coMoment +
+          (this.lMean - that.lMean) * (this.rMean - that.rMean) * ((this.n * that.n) / (this.n + that.n)),
+        this.n + that.n
+      )
+    }
+
+    override def result(): Map[String, (Double, Option[String])] =
+      Map(
+        "COVARIANCE" -> (coMoment / n, None),
+        "COVARIANCE_BESSEL" -> (coMoment / (n - 1), None)
+      )
+  }
 
   case class EqualStringColumnsMetricCalculator(
       cnt: Int,
