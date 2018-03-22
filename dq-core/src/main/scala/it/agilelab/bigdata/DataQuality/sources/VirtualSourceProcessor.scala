@@ -1,6 +1,6 @@
 package it.agilelab.bigdata.DataQuality.sources
 
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.FileId
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.FileId
 import it.agilelab.bigdata.DataQuality.utils._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
@@ -9,25 +9,6 @@ import scala.collection.JavaConversions.asJavaCollection
 /**
   * Created by Rocco Caruso on 12/10/17.
   */
-
-object JoinEnum extends Enumeration with Serializable {
-  type JoinEnumType = Value
-  val inner, outer, full, fullouter, leftouter, left, rightouter, right, leftsemi, leftanti, cross = Value
-
-  /**
-    * 'inner'
-    * 'outer'
-    * 'full'
-    * 'fullouter'
-    * 'leftouter'
-    * 'left'
-    * 'rightouter'
-    * 'right'
-    * 'leftsemi'
-    * 'leftanti'
-    * 'cross'
-    */
-}
 
 object VirtualSourceProcessor {
 
@@ -174,11 +155,8 @@ object VirtualSourceProcessor {
             s"processed $processed : ${firstLevelVirtualSources.keySet.mkString("-")} but head only addedSize")
         }
         loop(virtualSourcesToProcess, newActualSources)
-
       }
-
     }
-
     loop(initialVirtualSourcesMap, initialSourceMap)
   }
 

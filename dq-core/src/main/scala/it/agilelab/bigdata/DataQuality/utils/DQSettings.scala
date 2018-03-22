@@ -16,9 +16,7 @@ import scala.util.Try
 /**
   * Created by Paolo on 20/01/2017.
   */
-case class DQSettings(
-                       commandLineOpts: DQCommandLineOptions
-                     ) {
+case class DQSettings(commandLineOpts: DQCommandLineOptions) {
 
   val conf: Config = ConfigFactory
     .parseFile(new File(commandLineOpts.applicationConf))

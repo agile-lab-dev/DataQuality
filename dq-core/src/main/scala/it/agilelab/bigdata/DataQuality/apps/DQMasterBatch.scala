@@ -5,7 +5,7 @@ import java.sql.Connection
 import it.agilelab.bigdata.DataQuality.checks.CheckResult
 import it.agilelab.bigdata.DataQuality.configs.ConfigReader
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.{ColumnId, FileId}
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.{ColumnId, FileId}
 import it.agilelab.bigdata.DataQuality.metrics.{ComposedMetricCalculator, _}
 import it.agilelab.bigdata.DataQuality.sources.VirtualSourceProcessor.getActualSources
 import it.agilelab.bigdata.DataQuality.sources._
@@ -107,7 +107,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
                     databaseConfig.loadData(tableConf.table)
                 }
               Seq(Source(source, settings.refDateString, df, conf.keyfields))
-            case x => throw IllegalParameterException(x.getType)
+            case x => throw IllegalParameterException(x.getType.toString)
           }
       }
       .toSeq
@@ -188,7 +188,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
           val results
             : (Map[Seq[ColumnId], Map[ColumnMetric, (Double, Option[String])]],
                Map[FileMetric, (Double, Option[String])]) =
-            SourceProcessor.processAllMetrics(source.df,
+            MetricProcessor.processAllMetrics(source.df,
                                               colMetrics,
                                               fileMetrics,
                                               source.keyfields)
@@ -309,7 +309,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     dbConnections.values.foreach(_.close())
 
     /**
-      * SAVE CHECK RESULTS
+      * SAVE RESULTS
       */
     val finalCheckResults: Seq[CheckResult] = checkResults ++ sqlCheckResults
 

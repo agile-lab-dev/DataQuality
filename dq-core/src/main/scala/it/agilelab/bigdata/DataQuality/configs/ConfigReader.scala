@@ -9,7 +9,7 @@ import it.agilelab.bigdata.DataQuality.checks.SQLChecks.SQLCheck
 import it.agilelab.bigdata.DataQuality.checks.SnapshotChecks._
 import it.agilelab.bigdata.DataQuality.checks.TrendChecks._
 import it.agilelab.bigdata.DataQuality.exceptions.{IllegalParameterException, MissingParameterInException}
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.{FileId, MetricId}
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.{FileId, MetricId}
 import it.agilelab.bigdata.DataQuality.metrics.{OutputMetric, _}
 import it.agilelab.bigdata.DataQuality.postprocessors.{BasicPostprocessor, PostprocessorType}
 import it.agilelab.bigdata.DataQuality.sources._

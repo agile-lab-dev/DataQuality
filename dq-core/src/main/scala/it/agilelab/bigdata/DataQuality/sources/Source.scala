@@ -1,6 +1,8 @@
 package it.agilelab.bigdata.DataQuality.sources
 
 import it.agilelab.bigdata.DataQuality.configs.GenStructColumn
+import it.agilelab.bigdata.DataQuality.metrics.CalculatorStatus.Value
+import it.agilelab.bigdata.DataQuality.sources.SourceTypes.SourceType
 import it.agilelab.bigdata.DataQuality.targets.HdfsTargetConfig
 import it.agilelab.bigdata.DataQuality.utils.DQSettings
 import org.apache.spark.sql.DataFrame
@@ -10,8 +12,17 @@ import org.apache.spark.sql.DataFrame
   *
   * Different representation of source formats
   */
+object SourceTypes extends Enumeration {
+  type SourceType = Value
+  val hdfs: SourceType = Value("HDFS")
+  val table: SourceType = Value("TABLE")
+  val output: SourceType = Value("OUTPUT")
+  val virtual: SourceType = Value("VIRTUAL")
+  val hive: SourceType = Value("HIVE")
+}
+
 abstract class SourceConfig {
-  def getType: String //TODO enum
+  def getType: SourceType
   def keyfields: Seq[String]
 }
 
@@ -19,9 +30,8 @@ abstract class VirtualFile(id: String,
                            keyfields: Seq[String],
                            save: Boolean = false)
     extends SourceConfig {
-  override def getType: String = "VIRTUAL"
+  override def getType: SourceType = SourceTypes.virtual
   def isSave: Boolean = save
-
   def parentSourceIds: Seq[String]
 }
 
@@ -70,7 +80,7 @@ case class HdfsFile(
     )
   }
 
-  override def getType: String = "HDFS"
+  override def getType: SourceType = SourceTypes.hdfs
 }
 
 case class OutputFile(
@@ -84,7 +94,7 @@ case class OutputFile(
     schema: Option[List[GenStructColumn]] = None,
     keyfields: Seq[String] = Seq.empty
 ) extends SourceConfig {
-  override def getType: String = "OUTPUT"
+  override def getType: SourceType = SourceTypes.output
 }
 
 case class TableConfig(
@@ -95,7 +105,7 @@ case class TableConfig(
     password: Option[String],
     keyfields: Seq[String] = Seq.empty
 ) extends SourceConfig {
-  override def getType: String = "TABLE"
+  override def getType: SourceType = SourceTypes.table
 }
 
 case class HiveTableConfig(
@@ -104,7 +114,7 @@ case class HiveTableConfig(
     query: String,
     keyfields: Seq[String] = Seq.empty
 ) extends SourceConfig {
-  override def getType: String = "HIVE"
+  override def getType: SourceType = SourceTypes.hive
 }
 
 case class Source(

@@ -6,7 +6,7 @@ import com.typesafe.config.Config
 import it.agilelab.bigdata.DataQuality.checks.CheckResult
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
 import it.agilelab.bigdata.DataQuality.metrics.MetricResult
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.FileId
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.FileId
 import it.agilelab.bigdata.DataQuality.sources.HdfsFile
 import it.agilelab.bigdata.DataQuality.targets.HdfsTargetConfig
 import it.agilelab.bigdata.DataQuality.utils
