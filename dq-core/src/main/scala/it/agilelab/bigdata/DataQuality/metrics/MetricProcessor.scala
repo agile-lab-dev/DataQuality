@@ -4,7 +4,7 @@ import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.AlgebirdMetrics.{HyperLogLogMetricCalculator, TopKMetricCalculator}
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicNumericMetrics._
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicStringMetrics._
-import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.MultiColumnMetrics.{DayDistanceMetric, EqualStringColumnsMetricCalculator, LevenshteinDistanceMetric}
+import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.MultiColumnMetrics.{CovarianceMetricCalculator, DayDistanceMetric, EqualStringColumnsMetricCalculator, LevenshteinDistanceMetric}
 import it.agilelab.bigdata.DataQuality.metrics.FileMetrics.FileMetrics.RowCountMatricCalculator
 import it.agilelab.bigdata.DataQuality.utils
 import it.agilelab.bigdata.DataQuality.utils.{DQSettings, Logging}
@@ -112,7 +112,9 @@ object MetricProcessor extends Logging {
         "TOP_N" -> classOf[TopKMetricCalculator],
         "COLUMN_EQ" -> classOf[EqualStringColumnsMetricCalculator],
         "DAY_DISTANCE" -> classOf[DayDistanceMetric],
-        "LEVENSHTEIN_DISTANCE" -> classOf[LevenshteinDistanceMetric]
+        "LEVENSHTEIN_DISTANCE" -> classOf[LevenshteinDistanceMetric],
+        "COVARIANCE" -> classOf[CovarianceMetricCalculator],
+        "COVARIANCE_BESSEL" -> classOf[CovarianceMetricCalculator]
       )
 
     /**

@@ -1,10 +1,13 @@
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicStringMetrics.RegexValuesMetricCalculator
-
 import org.scalatest._
+
+import scala.util.Random
 
 class BasicStringMetricsSpec extends WordSpec with Matchers {
 
   "RegexValuesMetricCalculator" must {
+    val rand = Random
+    rand.setSeed(2018)
 
     "throw exception on empty map" in {
       val params: Map[String, Any] = Map.empty
@@ -19,19 +22,12 @@ class BasicStringMetricsSpec extends WordSpec with Matchers {
       assert(metric.result().keySet == Set("REGEX_VALUES"))
     }
 
-
-
+    "returns correct score" in {
+      val params: Map[String, Any] = Map("regex"->"^[a-z0-9_-]{1,15}$")
+      val metric = new RegexValuesMetricCalculator(params)
+      val values: Seq[String] = Seq(rand.nextInt(100).toString)
+      val updated = metric.increment(values).increment(values).increment(values).increment(values)
+      assert(updated.result()("REGEX_VALUES")._1 == 4)
+    }
   }
-
-//  "A Stack" should "pop values in last-in-first-out order" in {
-//    val stack = new Stack[Int]
-//    stack.push(1)
-//    stack.push(2)
-//    stack.pop() should be (2)
-//    stack.pop() should be (1)
-//  }
-
-//  it should "throw NoSuchElementException if an empty stack is popped" in {
-//
-//  }
 }
