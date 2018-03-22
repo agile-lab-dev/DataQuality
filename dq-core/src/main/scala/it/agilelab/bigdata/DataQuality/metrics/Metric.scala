@@ -6,11 +6,8 @@ package it.agilelab.bigdata.DataQuality.metrics
   */
 trait Metric {
   def id: String
-
   def name: String
-
   def description: String
-
   def paramMap: Map[String, Any]
 }
 

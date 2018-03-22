@@ -1,12 +1,8 @@
 package it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics
 
 import it.agilelab.bigdata.DataQuality.metrics.CalculatorStatus.CalculatorStatus
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.ParamMap
-import it.agilelab.bigdata.DataQuality.metrics.{
-  CalculatorStatus,
-  MetricCalculator,
-  StatusableCalculator
-}
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
+import it.agilelab.bigdata.DataQuality.metrics.{CalculatorStatus, MetricCalculator, StatusableCalculator}
 import it.agilelab.bigdata.DataQuality.utils.{getParametrizedMetricTail, _}
 import org.joda.time.format.DateTimeFormat
 

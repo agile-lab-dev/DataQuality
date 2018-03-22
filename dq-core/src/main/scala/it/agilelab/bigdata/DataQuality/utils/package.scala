@@ -5,7 +5,7 @@ import java.sql.ResultSet
 import java.text.DecimalFormat
 
 import com.typesafe.config.Config
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.ParamMap
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
 import it.agilelab.bigdata.DataQuality.metrics.{ColumnMetricResult, ComposedMetricResult, FileMetricResult}
 import it.agilelab.bigdata.DataQuality.targets.{HdfsTargetConfig, SystemTargetConfig}
 import org.apache.hadoop.fs.{FileSystem, Path}

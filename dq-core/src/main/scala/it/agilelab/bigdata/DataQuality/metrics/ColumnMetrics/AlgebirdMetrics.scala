@@ -2,7 +2,7 @@ package it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics
 
 import com.twitter.algebird.{HLL, HyperLogLog, HyperLogLogMonoid, SpaceSaver}
 import it.agilelab.bigdata.DataQuality.metrics.MetricCalculator
-import it.agilelab.bigdata.DataQuality.metrics.SourceProcessor.ParamMap
+import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
 import it.agilelab.bigdata.DataQuality.utils.{getParametrizedMetricTail, tryToString}
 
 /**
