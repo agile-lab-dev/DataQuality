@@ -1,6 +1,6 @@
 package it.agilelab.bigdata.DataQuality.checks
 
-import it.agilelab.bigdata.DataQuality.metrics.{ColumnMetricResult, ComposedMetricResult, FileMetricResult, MetricResult}
+import it.agilelab.bigdata.DataQuality.metrics._
 
 /**
   * Created by Egor Makhov on 29/05/2017.
@@ -23,12 +23,12 @@ case class CheckMessageGenerator(metricRes: MetricResult,
     val metricName = metricRes.name
 
     val onFile = metricRes.getType match {
-      case "Column" =>
+      case DQResultTypes.column =>
         val mm = metricRes.asInstanceOf[ColumnMetricResult]
         s"on column ${mm.sourceId}[${mm.columnNames}]"
-      case "File" =>
+      case DQResultTypes.file =>
         s"on file ${metricRes.asInstanceOf[FileMetricResult].sourceId}"
-      case "Composed" =>
+      case DQResultTypes.composed =>
         s"on file ${metricRes.asInstanceOf[ComposedMetricResult].sourceId}"
     }
 

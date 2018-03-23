@@ -50,6 +50,11 @@ object BasicStringMetrics {
 
   }
 
+  /**
+    * Calculates amount of rows that fits the provided regular expression
+    * @param cnt current counter
+    * @param paramMap should contain regex
+    */
   case class RegexValuesMetricCalculator(cnt: Int, paramMap: Map[String, Any])
       extends MetricCalculator {
 

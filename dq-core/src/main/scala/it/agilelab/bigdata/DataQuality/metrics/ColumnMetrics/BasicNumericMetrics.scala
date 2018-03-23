@@ -95,7 +95,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "MIN_NUMBER"
     */
-  case class MinNumericValueMatricCalculator(min: Double)
+  case class MinNumericValueMetricCalculator(min: Double)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -104,7 +104,7 @@ object BasicNumericMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToDouble(values.head) match {
-        case Some(v) => MinNumericValueMatricCalculator(Math.min(v, min))
+        case Some(v) => MinNumericValueMetricCalculator(Math.min(v, min))
         case None    => this
       }
     }
@@ -113,9 +113,9 @@ object BasicNumericMetrics {
       Map("MIN_NUMBER" -> (min.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      MinNumericValueMatricCalculator(
+      MinNumericValueMetricCalculator(
         Math.min(this.min,
-                 m2.asInstanceOf[MinNumericValueMatricCalculator].min))
+                 m2.asInstanceOf[MinNumericValueMetricCalculator].min))
 
   }
 
@@ -126,7 +126,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "MAX_NUMBER"
     */
-  case class MaxNumericValueMatricCalculator(max: Double)
+  case class MaxNumericValueMetricCalculator(max: Double)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -135,7 +135,7 @@ object BasicNumericMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToDouble(values.head) match {
-        case Some(v) => MaxNumericValueMatricCalculator(Math.max(v, max))
+        case Some(v) => MaxNumericValueMetricCalculator(Math.max(v, max))
         case None    => this
       }
     }
@@ -144,9 +144,9 @@ object BasicNumericMetrics {
       Map("MAX_NUMBER" -> (max.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      MaxNumericValueMatricCalculator(
+      MaxNumericValueMetricCalculator(
         Math.max(this.max,
-                 m2.asInstanceOf[MaxNumericValueMatricCalculator].max))
+                 m2.asInstanceOf[MaxNumericValueMetricCalculator].max))
 
   }
 
@@ -157,7 +157,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "SUM_NUMBER"
     */
-  case class SumNumericValueMatricCalculator(sum: Double)
+  case class SumNumericValueMetricCalculator(sum: Double)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -166,7 +166,7 @@ object BasicNumericMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToDouble(values.head) match {
-        case Some(v) => SumNumericValueMatricCalculator(v + sum)
+        case Some(v) => SumNumericValueMetricCalculator(v + sum)
         case None    => this
       }
     }
@@ -175,8 +175,8 @@ object BasicNumericMetrics {
       Map("SUM_NUMBER" -> (sum.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      SumNumericValueMatricCalculator(
-        this.sum + m2.asInstanceOf[SumNumericValueMatricCalculator].sum)
+      SumNumericValueMetricCalculator(
+        this.sum + m2.asInstanceOf[SumNumericValueMetricCalculator].sum)
 
   }
 
@@ -234,7 +234,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "FORMATTED_NUMBER"
     */
-  case class NumberFormattedValuesMatricCalculator(cnt: Double,
+  case class NumberFormattedValuesMetricCalculator(cnt: Double,
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -257,7 +257,7 @@ object BasicNumericMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       val (typeErr, precErr, scaleErr) = checkNumber(values.head, prec, scale)
-      NumberFormattedValuesMatricCalculator(
+      NumberFormattedValuesMetricCalculator(
         cnt + (if (typeErr != 0 && precErr != 0 && scaleErr != 0) 1 else 0),
         paramMap)
     }
@@ -267,8 +267,8 @@ object BasicNumericMetrics {
         "FORMATTED_NUMBER" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      NumberFormattedValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[NumberFormattedValuesMatricCalculator].cnt,
+      NumberFormattedValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[NumberFormattedValuesMetricCalculator].cnt,
         paramMap)
 
     private def checkNumber(value: Any,
@@ -310,7 +310,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "CASTED_NUMBER"
     */
-  case class NumberCastValuesMatricCalculator(cnt: Double)
+  case class NumberCastValuesMetricCalculator(cnt: Double)
       extends MetricCalculator {
 
     def this(paramMap: Map[String, Any]) {
@@ -319,7 +319,7 @@ object BasicNumericMetrics {
 
     override def increment(values: Seq[Any]): MetricCalculator = {
       if (Try { values.head.asInstanceOf[Double] }.isSuccess)
-        NumberCastValuesMatricCalculator(cnt + 1)
+        NumberCastValuesMetricCalculator(cnt + 1)
       else this
     }
 
@@ -327,8 +327,8 @@ object BasicNumericMetrics {
       Map("CASTED_NUMBER" -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      NumberCastValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[NumberCastValuesMatricCalculator].cnt)
+      NumberCastValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[NumberCastValuesMetricCalculator].cnt)
 
   }
 
@@ -341,7 +341,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "NUMBER_IN_DOMAIN"
     */
-  case class NumberInDomainValuesMatricCalculator(cnt: Double,
+  case class NumberInDomainValuesMetricCalculator(cnt: Double,
                                                   paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -355,7 +355,7 @@ object BasicNumericMetrics {
       tryToDouble(values.head) match {
         case Some(v) =>
           if (values.contains(v))
-            NumberInDomainValuesMatricCalculator(cnt + 1, paramMap)
+            NumberInDomainValuesMetricCalculator(cnt + 1, paramMap)
           else this
         case None => this
       }
@@ -366,8 +366,8 @@ object BasicNumericMetrics {
         "NUMBER_IN_DOMAIN" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      NumberInDomainValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[NumberInDomainValuesMatricCalculator].cnt,
+      NumberInDomainValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[NumberInDomainValuesMetricCalculator].cnt,
         paramMap)
 
   }
@@ -381,7 +381,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "NUMBER_OUT_DOMAIN"
     */
-  case class NumberOutDomainValuesMatricCalculator(cnt: Double,
+  case class NumberOutDomainValuesMetricCalculator(cnt: Double,
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
@@ -395,7 +395,7 @@ object BasicNumericMetrics {
       tryToDouble(values.head) match {
         case Some(v) =>
           if (values.contains(v)) this
-          else NumberOutDomainValuesMatricCalculator(cnt + 1, paramMap)
+          else NumberOutDomainValuesMetricCalculator(cnt + 1, paramMap)
         case None => this
       }
     }
@@ -405,8 +405,8 @@ object BasicNumericMetrics {
         "NUMBER_OUT_DOMAIN" + getParametrizedMetricTail(paramMap) -> (cnt, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      NumberOutDomainValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[NumberOutDomainValuesMatricCalculator].cnt,
+      NumberOutDomainValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[NumberOutDomainValuesMetricCalculator].cnt,
         paramMap)
 
   }
@@ -420,7 +420,7 @@ object BasicNumericMetrics {
     * @return result map with keys:
     *   "NUMBER_VALUES"
     */
-  case class NumberValuesMatricCalculator(cnt: Int, paramMap: ParamMap)
+  case class NumberValuesMetricCalculator(cnt: Int, paramMap: ParamMap)
       extends MetricCalculator {
 
     private val lvalue: Double = paramMap("compareValue").toString.toDouble
@@ -432,7 +432,7 @@ object BasicNumericMetrics {
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToDouble(values.head) match {
         case Some(v) =>
-          NumberValuesMatricCalculator(cnt + (if (v == lvalue) 1 else 0),
+          NumberValuesMetricCalculator(cnt + (if (v == lvalue) 1 else 0),
                                        paramMap)
         case None => this
       }
@@ -443,8 +443,8 @@ object BasicNumericMetrics {
         "NUMBER_VALUES" + getParametrizedMetricTail(paramMap) -> (cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      NumberValuesMatricCalculator(
-        this.cnt + m2.asInstanceOf[NumberValuesMatricCalculator].cnt,
+      NumberValuesMetricCalculator(
+        this.cnt + m2.asInstanceOf[NumberValuesMetricCalculator].cnt,
         paramMap)
   }
 
