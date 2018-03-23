@@ -90,17 +90,17 @@ object HdfsWriter extends Logging {
       val execDate: String = settings.refDateString
 
       val df = sq.head.getType match {
-        case "Column" =>
+        case DQResultTypes.column =>
           val df =
             sqlContext.createDataFrame(sq.asInstanceOf[Seq[ColumnMetricResult]])
           df.withColumn("temp", df("columnNames").cast(StringType))
             .drop("columnNames")
             .withColumnRenamed("temp", "columnNames")
-        case "File" =>
+        case DQResultTypes.file =>
           sqlContext.createDataFrame(sq.asInstanceOf[Seq[FileMetricResult]])
-        case "Composed" =>
+        case DQResultTypes.composed =>
           sqlContext.createDataFrame(sq.asInstanceOf[Seq[ComposedMetricResult]])
-        case "Check" =>
+        case DQResultTypes.check =>
           sqlContext.createDataFrame(sq.asInstanceOf[Seq[CheckResult]])
         case x => throw IllegalParameterException(x.toString)
       }

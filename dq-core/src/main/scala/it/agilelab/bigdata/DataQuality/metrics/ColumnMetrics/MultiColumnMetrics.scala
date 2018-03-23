@@ -21,6 +21,13 @@ import scala.util.{Success, Try}
 
 object MultiColumnMetrics extends Logging {
 
+  /**
+    * Calculates covariance between values of two columns
+    * @param lMean Mean of the first column
+    * @param rMean Mean of the second column
+    * @param coMoment current co-moment
+    * @param n number of records
+    */
   case class CovarianceMetricCalculator(
       lMean: Double,
       rMean: Double,
@@ -63,6 +70,12 @@ object MultiColumnMetrics extends Logging {
       )
   }
 
+  /**
+    * Calculates amount of equal rows
+    * @param cnt current counter
+    * @param status current calculator status (fails if lValue != rValue)
+    * @param failCount current fail counter
+    */
   case class EqualStringColumnsMetricCalculator(
       cnt: Int,
       protected val status: CalculatorStatus = CalculatorStatus.OK,
@@ -93,6 +106,7 @@ object MultiColumnMetrics extends Logging {
 
     override def result(): Map[String, (Double, Option[String])] =
       Map("COLUMN_EQ" -> (cnt.toDouble, None))
+
     override def merge(m2: MetricCalculator): MetricCalculator = {
       val m2Casted = m2.asInstanceOf[EqualStringColumnsMetricCalculator]
       EqualStringColumnsMetricCalculator(
@@ -178,6 +192,14 @@ object MultiColumnMetrics extends Logging {
       this.copy(status = failed, failCount = this.failCount + 1)
   }
 
+  /**
+    * Calculates amount of rows where Levenshtein distance between 2 columns
+    * is lesser than threshold
+    * @param cnt current success counter
+    * @param paramMap paramMap to set the threshold
+    * @param status current calculator status (fails if distance > distanceThreshold)
+    * @param failCount current fail counter
+    */
   case class LevenshteinDistanceMetric(cnt: Double,
                                        paramMap: ParamMap,
                                        protected val status: CalculatorStatus =

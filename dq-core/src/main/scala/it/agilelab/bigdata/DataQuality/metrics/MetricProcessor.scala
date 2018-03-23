@@ -5,7 +5,7 @@ import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.AlgebirdMetrics.{Hy
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicNumericMetrics._
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicStringMetrics._
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.MultiColumnMetrics.{CovarianceMetricCalculator, DayDistanceMetric, EqualStringColumnsMetricCalculator, LevenshteinDistanceMetric}
-import it.agilelab.bigdata.DataQuality.metrics.FileMetrics.FileMetrics.RowCountMatricCalculator
+import it.agilelab.bigdata.DataQuality.metrics.FileMetrics.FileMetrics.RowCountMetricCalculator
 import it.agilelab.bigdata.DataQuality.utils
 import it.agilelab.bigdata.DataQuality.utils.{DQSettings, Logging}
 import org.apache.spark.sql.{DataFrame, Row}
@@ -71,7 +71,7 @@ object MetricProcessor extends Logging {
       fileMetrics.map { mm =>
       {
         val calc = mm.name match {
-          case "ROW_COUNT" => RowCountMatricCalculator(0) //return rows count
+          case "ROW_COUNT" => RowCountMetricCalculator(0) //return rows count
           case x           => throw new IllegalParameterException(x)
         }
         mm -> calc
@@ -85,25 +85,25 @@ object MetricProcessor extends Logging {
         "APPROXIMATE_DISTINCT_VALUES" -> classOf[HyperLogLogMetricCalculator],
         "NULL_VALUES" -> classOf[NullValuesMetricCalculator],
         "EMPTY_VALUES" -> classOf[EmptyStringValuesMetricCalculator],
-        "MIN_NUMBER" -> classOf[MinNumericValueMatricCalculator],
-        "MAX_NUMBER" -> classOf[MaxNumericValueMatricCalculator],
-        "SUM_NUMBER" -> classOf[SumNumericValueMatricCalculator],
+        "MIN_NUMBER" -> classOf[MinNumericValueMetricCalculator],
+        "MAX_NUMBER" -> classOf[MaxNumericValueMetricCalculator],
+        "SUM_NUMBER" -> classOf[SumNumericValueMetricCalculator],
         "AVG_NUMBER" -> classOf[StdAvgNumericValueCalculator],
         "STD_NUMBER" -> classOf[StdAvgNumericValueCalculator],
         "MIN_STRING" -> classOf[MinStringValueMetricCalculator],
         "MAX_STRING" -> classOf[MaxStringValueMetricCalculator],
         "AVG_STRING" -> classOf[AvgStringValueMetricCalculator],
         "FORMATTED_DATE" -> classOf[DateFormattedValuesMetricCalculator],
-        "FORMATTED_NUMBER" -> classOf[NumberFormattedValuesMatricCalculator],
+        "FORMATTED_NUMBER" -> classOf[NumberFormattedValuesMetricCalculator],
         "FORMATTED_STRING" -> classOf[StringFormattedValuesMetricCalculator],
-        "CASTED_NUMBER" -> classOf[NumberCastValuesMatricCalculator],
-        "NUMBER_IN_DOMAIN" -> classOf[NumberInDomainValuesMatricCalculator],
-        "NUMBER_OUT_DOMAIN" -> classOf[NumberOutDomainValuesMatricCalculator],
+        "CASTED_NUMBER" -> classOf[NumberCastValuesMetricCalculator],
+        "NUMBER_IN_DOMAIN" -> classOf[NumberInDomainValuesMetricCalculator],
+        "NUMBER_OUT_DOMAIN" -> classOf[NumberOutDomainValuesMetricCalculator],
         "STRING_IN_DOMAIN" -> classOf[StringInDomainValuesMetricCalculator],
         "STRING_OUT_DOMAIN" -> classOf[StringOutDomainValuesMetricCalculator],
         "STRING_VALUES" -> classOf[StringValuesMetricCalculator],
         "REGEX_VALUES" -> classOf[RegexValuesMetricCalculator],
-        "NUMBER_VALUES" -> classOf[NumberValuesMatricCalculator],
+        "NUMBER_VALUES" -> classOf[NumberValuesMetricCalculator],
         "MEDIAN_VALUE" -> classOf[TDigestMetricCalculator],
         "FIRST_QUANTILE" -> classOf[TDigestMetricCalculator],
         "THIRD_QUANTILE" -> classOf[TDigestMetricCalculator],

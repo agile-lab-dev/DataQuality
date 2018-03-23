@@ -297,7 +297,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * PERFORM SQL CHECKS
       */
-    log.info(s"\n# SQL checks proccessing...")
+    log.info(s"\n# SQL checks processing...")
 
     val sqlCheckResults: List[CheckResult] =
       configuration.sqlChecksList.map(check => {

@@ -16,16 +16,16 @@ object FileMetrics {
     * @return result map with keys:
     *   "ROW_COUNT"
     */
-  case class RowCountMatricCalculator(cnt: Int) extends MetricCalculator {
+  case class RowCountMetricCalculator(cnt: Int) extends MetricCalculator {
 
     override def increment(values: Seq[Any]): MetricCalculator =
-      RowCountMatricCalculator(cnt + 1)
+      RowCountMetricCalculator(cnt + 1)
 
     override def result(): Map[String, (Double, Option[String])] =
       Map("ROW_COUNT" -> (cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
-      RowCountMatricCalculator(
-        this.cnt + m2.asInstanceOf[RowCountMatricCalculator].cnt)
+      RowCountMetricCalculator(
+        this.cnt + m2.asInstanceOf[RowCountMetricCalculator].cnt)
   }
 }

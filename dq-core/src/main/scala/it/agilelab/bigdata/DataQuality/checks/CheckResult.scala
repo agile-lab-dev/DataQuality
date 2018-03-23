@@ -1,6 +1,7 @@
 package it.agilelab.bigdata.DataQuality.checks
 
-import it.agilelab.bigdata.DataQuality.metrics.TypedResult
+import it.agilelab.bigdata.DataQuality.metrics.DQResultTypes.DQResultType
+import it.agilelab.bigdata.DataQuality.metrics.{DQResultTypes, TypedResult}
 
 /**
   * Created by Gianvito Siciliano on 29/12/16.
@@ -19,5 +20,5 @@ case class CheckResult(
     message: String,
     execDate: String
 ) extends TypedResult {
-  override def getType: String = "Check"
+  override def getType: DQResultType = DQResultTypes.check
 }

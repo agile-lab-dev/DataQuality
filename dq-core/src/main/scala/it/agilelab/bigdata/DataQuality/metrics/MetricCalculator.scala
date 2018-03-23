@@ -100,7 +100,7 @@ class ComposedMetricCalculator(primitiveMetrics: Iterable[MetricResult])
 
   private def replacer: (Regex.Match) => String = (a: Regex.Match) => {
     val id = a.group(1)
-    metricsResultMap.get(id).get
+    metricsResultMap(id)
   }
 
   /**

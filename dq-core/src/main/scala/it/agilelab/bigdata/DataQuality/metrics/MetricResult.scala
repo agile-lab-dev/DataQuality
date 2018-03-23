@@ -1,12 +1,23 @@
 package it.agilelab.bigdata.DataQuality.metrics
 
+import it.agilelab.bigdata.DataQuality.metrics.DQResultTypes.DQResultType
+import it.agilelab.bigdata.DataQuality.sources.SourceTypes.Value
+
 /**
   * Created by Gianvito Siciliano on 29/12/16.
   *
   * Representations of different metric results
   */
+object DQResultTypes extends Enumeration {
+  type DQResultType = Value
+  val column: DQResultType = Value("Column")
+  val composed: DQResultType = Value("Composed")
+  val file: DQResultType = Value("File")
+  val check: DQResultType = Value("Check")
+}
+
 trait TypedResult {
-  def getType: String
+  def getType: DQResultType
 }
 
 trait MetricResult extends TypedResult {
@@ -28,7 +39,7 @@ case class ColumnMetricResult(
     result: Double,
     additionalResult: String
 ) extends MetricResult {
-  override def getType = "Column"
+  override def getType: DQResultType = DQResultTypes.column
 }
 
 case class FileMetricResult(
@@ -39,7 +50,7 @@ case class FileMetricResult(
     result: Double,
     additionalResult: String
 ) extends MetricResult {
-  override def getType: String = "File"
+  override def getType: DQResultType = DQResultTypes.file
 }
 
 case class ComposedMetricResult(
@@ -51,5 +62,5 @@ case class ComposedMetricResult(
     result: Double,
     additionalResult: String
 ) extends MetricResult {
-  override def getType: String = "Composed"
+  override def getType: DQResultType = DQResultTypes.composed
 }
