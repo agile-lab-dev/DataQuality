@@ -113,6 +113,7 @@ object MetricProcessor extends Logging {
         "COLUMN_EQ" -> classOf[EqualStringColumnsMetricCalculator],
         "DAY_DISTANCE" -> classOf[DayDistanceMetric],
         "LEVENSHTEIN_DISTANCE" -> classOf[LevenshteinDistanceMetric],
+        "CO-MOMENT" -> classOf[CovarianceMetricCalculator],
         "COVARIANCE" -> classOf[CovarianceMetricCalculator],
         "COVARIANCE_BESSEL" -> classOf[CovarianceMetricCalculator]
       )
