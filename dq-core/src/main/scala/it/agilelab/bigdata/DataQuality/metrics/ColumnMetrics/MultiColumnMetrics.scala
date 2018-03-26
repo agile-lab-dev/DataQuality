@@ -65,6 +65,7 @@ object MultiColumnMetrics extends Logging {
 
     override def result(): Map[String, (Double, Option[String])] =
       Map(
+        "CO-MOMENT" -> (coMoment, None),
         "COVARIANCE" -> (coMoment / n, None),
         "COVARIANCE_BESSEL" -> (coMoment / (n - 1), None)
       )
