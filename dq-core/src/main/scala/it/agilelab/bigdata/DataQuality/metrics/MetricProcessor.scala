@@ -1,10 +1,6 @@
 package it.agilelab.bigdata.DataQuality.metrics
 
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
-import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.AlgebirdMetrics.{HyperLogLogMetricCalculator, TopKMetricCalculator}
-import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicNumericMetrics._
-import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicStringMetrics._
-import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.MultiColumnMetrics.{CovarianceMetricCalculator, DayDistanceMetric, EqualStringColumnsMetricCalculator, LevenshteinDistanceMetric}
 import it.agilelab.bigdata.DataQuality.metrics.FileMetrics.FileMetrics.RowCountMetricCalculator
 import it.agilelab.bigdata.DataQuality.utils
 import it.agilelab.bigdata.DataQuality.utils.{DQSettings, Logging}
@@ -78,46 +74,6 @@ object MetricProcessor extends Logging {
       }
       }.toMap
 
-    // init column metric calculators
-    val columnMetricGroupMap: Map[ColumnId, Class[_ <: MetricCalculator with Product with Serializable]] =
-      Map(
-        "DISTINCT_VALUES" -> classOf[UniqueValuesMetricCalculator],
-        "APPROXIMATE_DISTINCT_VALUES" -> classOf[HyperLogLogMetricCalculator],
-        "NULL_VALUES" -> classOf[NullValuesMetricCalculator],
-        "EMPTY_VALUES" -> classOf[EmptyStringValuesMetricCalculator],
-        "MIN_NUMBER" -> classOf[MinNumericValueMetricCalculator],
-        "MAX_NUMBER" -> classOf[MaxNumericValueMetricCalculator],
-        "SUM_NUMBER" -> classOf[SumNumericValueMetricCalculator],
-        "AVG_NUMBER" -> classOf[StdAvgNumericValueCalculator],
-        "STD_NUMBER" -> classOf[StdAvgNumericValueCalculator],
-        "MIN_STRING" -> classOf[MinStringValueMetricCalculator],
-        "MAX_STRING" -> classOf[MaxStringValueMetricCalculator],
-        "AVG_STRING" -> classOf[AvgStringValueMetricCalculator],
-        "FORMATTED_DATE" -> classOf[DateFormattedValuesMetricCalculator],
-        "FORMATTED_NUMBER" -> classOf[NumberFormattedValuesMetricCalculator],
-        "FORMATTED_STRING" -> classOf[StringFormattedValuesMetricCalculator],
-        "CASTED_NUMBER" -> classOf[NumberCastValuesMetricCalculator],
-        "NUMBER_IN_DOMAIN" -> classOf[NumberInDomainValuesMetricCalculator],
-        "NUMBER_OUT_DOMAIN" -> classOf[NumberOutDomainValuesMetricCalculator],
-        "STRING_IN_DOMAIN" -> classOf[StringInDomainValuesMetricCalculator],
-        "STRING_OUT_DOMAIN" -> classOf[StringOutDomainValuesMetricCalculator],
-        "STRING_VALUES" -> classOf[StringValuesMetricCalculator],
-        "REGEX_VALUES" -> classOf[RegexValuesMetricCalculator],
-        "NUMBER_VALUES" -> classOf[NumberValuesMetricCalculator],
-        "MEDIAN_VALUE" -> classOf[TDigestMetricCalculator],
-        "FIRST_QUANTILE" -> classOf[TDigestMetricCalculator],
-        "THIRD_QUANTILE" -> classOf[TDigestMetricCalculator],
-        "GET_QUANTILE" -> classOf[TDigestMetricCalculator],
-        "GET_PERCENTILE" -> classOf[TDigestMetricCalculator],
-        "TOP_N" -> classOf[TopKMetricCalculator],
-        "COLUMN_EQ" -> classOf[EqualStringColumnsMetricCalculator],
-        "DAY_DISTANCE" -> classOf[DayDistanceMetric],
-        "LEVENSHTEIN_DISTANCE" -> classOf[LevenshteinDistanceMetric],
-        "CO-MOMENT" -> classOf[CovarianceMetricCalculator],
-        "COVARIANCE" -> classOf[CovarianceMetricCalculator],
-        "COVARIANCE_BESSEL" -> classOf[CovarianceMetricCalculator]
-      )
-
     /**
       * The main idea of all that construction is calculators grouping.
       *
@@ -153,7 +109,7 @@ object MetricProcessor extends Logging {
           colId -> metList
             .map(mm =>
               (mm,
-                initGroupCalculator(columnMetricGroupMap(mm.name), mm.paramMap)))
+                initGroupCalculator(MetricMapper.getMetricClass(mm.name), mm.paramMap)))
             .groupBy(_._2)
             .mapValues(_.map(_._1))
             .toSeq

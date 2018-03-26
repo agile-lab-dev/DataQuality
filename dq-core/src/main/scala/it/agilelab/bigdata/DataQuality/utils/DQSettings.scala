@@ -16,15 +16,24 @@ import scala.util.Try
 /**
   * Created by Paolo on 20/01/2017.
   */
-case class DQSettings(commandLineOpts: DQCommandLineOptions) {
+class DQSettings(conf: Config,
+                 val configFilePath: String,
+                 val repartition: Boolean,
+                 val local: Boolean,
+                 val ref_date: DateTime) {
 
-  val conf: Config = ConfigFactory
-    .parseFile(new File(commandLineOpts.applicationConf))
-    .getConfig("dataquality")
+  def this(commandLineOpts: DQCommandLineOptions) {
+    this(
+      ConfigFactory.parseFile(new File(commandLineOpts.applicationConf)).getConfig("dataquality"),
+      commandLineOpts.configFilePath,
+      commandLineOpts.repartition,
+      commandLineOpts.local,
+      new time.DateTime(commandLineOpts.refDate.getTime)
+    )
+  }
 
-  val inputArgDateFormat: DateTimeFormatter =
+  private val inputArgDateFormat: DateTimeFormatter =
     DateTimeFormat.forPattern("yyyy-MM-dd")
-  val ref_date: DateTime = new time.DateTime(commandLineOpts.refDate.getTime)
 
   lazy val refDateString: String = ref_date.toString(inputArgDateFormat)
 
@@ -32,27 +41,16 @@ case class DQSettings(commandLineOpts: DQCommandLineOptions) {
 
   val vsDumpConfig: Option[HdfsTargetConfig] = Try {
     val obj: Config = conf.getConfig("vsDumpConfig")
-
     utils.parseTargetConfig(obj).get
   }.toOption
 
-  val appName: String =
-    Try(conf.getString("appName")).toOption.getOrElse("")
-
-  val appDir: String =
-    Try(conf.getString("appDirectory")).toOption.getOrElse("")
-  val errorDumpSize: Int =
-    Try(conf.getInt("errorDumpSize")).toOption.getOrElse(1000)
-  val errorFolderPath
-  : Option[String] = Try(conf.getString("errorFolderPath")).toOption
-
-  val hiveDir: String =
-    Try(conf.getString("hiveDir")).toOption.getOrElse("")
-  val hadoopConfDir: String =
-    Try(conf.getString("hadoopConfDir")).toOption.getOrElse("")
-
-  val mailingMode: String =
-    Try(conf.getString("mailing.mode").toLowerCase).getOrElse("internal")
+  val appName: String = Try(conf.getString("appName")).toOption.getOrElse("")
+  val appDir: String = Try(conf.getString("appDirectory")).toOption.getOrElse("")
+  val errorDumpSize: Int = Try(conf.getInt("errorDumpSize")).toOption.getOrElse(1000)
+  val errorFolderPath: Option[String] = Try(conf.getString("errorFolderPath")).toOption
+  val hiveDir: String = Try(conf.getString("hiveDir")).toOption.getOrElse("")
+  val hadoopConfDir: String = Try(conf.getString("hadoopConfDir")).toOption.getOrElse("")
+  val mailingMode: String = Try(conf.getString("mailing.mode").toLowerCase).getOrElse("internal")
   val mailingConfig: Option[Mailer] = {
     val monfig = Try(conf.getConfig("mailing.conf")).toOption
     monfig match {
@@ -60,7 +58,6 @@ case class DQSettings(commandLineOpts: DQCommandLineOptions) {
       case None    => None
     }
   }
-
   private val storageType: String = conf.getString("storage.type")
   private val storageConfig: Config = conf.getConfig("storage.config")
   // todo add new storage types

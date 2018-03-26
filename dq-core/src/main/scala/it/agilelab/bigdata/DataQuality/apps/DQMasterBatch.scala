@@ -34,8 +34,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
       * PARSE CONFIGURATION FILE
       *
       */
-    val configuration = new ConfigReader(
-      settings.commandLineOpts.configFilePath)
+    val configuration = new ConfigReader(settings.configFilePath)
 
     // Initialized here because it's app specific, option and related to sqlContext
     val hiveContext: Option[HiveContext] = if (!settings.hiveDir.isEmpty) {

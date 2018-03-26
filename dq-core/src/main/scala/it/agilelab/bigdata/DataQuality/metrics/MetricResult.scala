@@ -1,7 +1,6 @@
 package it.agilelab.bigdata.DataQuality.metrics
 
 import it.agilelab.bigdata.DataQuality.metrics.DQResultTypes.DQResultType
-import it.agilelab.bigdata.DataQuality.sources.SourceTypes.Value
 
 /**
   * Created by Gianvito Siciliano on 29/12/16.
