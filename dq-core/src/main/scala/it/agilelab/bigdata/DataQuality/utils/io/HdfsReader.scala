@@ -214,7 +214,7 @@ object HdfsReader extends Logging {
               .load(filePath)
         }
 
-        if (settings.commandLineOpts.repartition)
+        if (settings.repartition)
           Some(res.repartition(sqlContext.sparkContext.defaultParallelism))
         else
           Some(res)
@@ -298,7 +298,7 @@ object HdfsReader extends Logging {
     }
 
 //      log.info("result count "+result.count())
-    if (settings.commandLineOpts.repartition)
+    if (settings.repartition)
       return Seq(result.repartition(sqlContext.sparkContext.defaultParallelism))
 
     Seq(result)

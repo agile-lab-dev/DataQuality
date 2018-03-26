@@ -59,7 +59,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
     DQCommandLineOptions.parser().parse(args, DQCommandLineOptions("","")) match {
       case Some(commandLineOptions) =>
         // Load our own config values from the default location, application.conf
-        val settings = DQSettings(commandLineOptions)
+        val settings = new DQSettings(commandLineOptions)
 
         log.info("Mailing mode: " + settings.mailingMode)
         settings.mailingConfig match {

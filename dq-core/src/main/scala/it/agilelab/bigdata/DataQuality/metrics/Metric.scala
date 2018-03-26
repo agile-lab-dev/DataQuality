@@ -4,7 +4,7 @@ package it.agilelab.bigdata.DataQuality.metrics
   * Created by Gianvito Siciliano on 29/12/16.
   * Representation of different metric
   */
-trait Metric {
+sealed trait Metric {
   def id: String
   def name: String
   def description: String
