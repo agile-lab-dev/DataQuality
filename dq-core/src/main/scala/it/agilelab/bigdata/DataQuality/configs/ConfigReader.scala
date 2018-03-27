@@ -9,7 +9,6 @@ import it.agilelab.bigdata.DataQuality.checks.SQLChecks.SQLCheck
 import it.agilelab.bigdata.DataQuality.checks.SnapshotChecks._
 import it.agilelab.bigdata.DataQuality.checks.TrendChecks._
 import it.agilelab.bigdata.DataQuality.exceptions.{IllegalParameterException, MissingParameterInException}
-import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.{FileId, MetricId}
 import it.agilelab.bigdata.DataQuality.metrics.{OutputMetric, _}
 import it.agilelab.bigdata.DataQuality.postprocessors.{BasicPostprocessor, PostprocessorType}
 import it.agilelab.bigdata.DataQuality.sources._
@@ -34,16 +33,16 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
   val configObj: Config = ConfigFactory.parseFile(new File(configNameFile)).resolve()
 
   //parse sources, metrics, checks, it.agilelab.bigdata.targets
-  val sourcesConfigMap: Map[FileId, SourceConfig] = getSourcesById
-  val virtualSourcesConfigMap: Map[FileId, VirtualFile] = getVirtualSourcesById
+  val sourcesConfigMap: Map[String, SourceConfig] = getSourcesById
+  val virtualSourcesConfigMap: Map[String, VirtualFile] = getVirtualSourcesById
 
-  val dbConfigMap: Map[FileId, DatabaseConfig] = getDatabasesById
+  val dbConfigMap: Map[String, DatabaseConfig] = getDatabasesById
 
-  val metricsBySourceList: List[(FileId, Metric)] = getMetricsBySource
-  lazy val metricsBySourceMap: Map[FileId, List[Metric]] = metricsBySourceList.groupBy(_._1).mapValues(_.map(_._2))
+  val metricsBySourceList: List[(String, Metric)] = getMetricsBySource
+  lazy val metricsBySourceMap: Map[String, List[Metric]] = metricsBySourceList.groupBy(_._1).mapValues(_.map(_._2))
 
-  val metricsByChecksList: List[(Check, MetricId)] = getMetricByCheck
-  lazy val metricsByCheckMap: Map[Check, List[MetricId]] = metricsByChecksList.groupBy(_._1).mapValues(_.map(_._2))
+  val metricsByChecksList: List[(Check, String)] = getMetricByCheck
+  lazy val metricsByCheckMap: Map[Check, List[String]] = metricsByChecksList.groupBy(_._1).mapValues(_.map(_._2))
 
   lazy val composedMetrics: List[ComposedMetric] = getComposedMetrics
 
@@ -98,7 +97,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
               Try(parseDateFromPath(path))
                 .getOrElse(Try(generalConfig.getString("date"))
                   .getOrElse(settings.refDateString))
-            val deps = Try(generalConfig.getStringList("deps").toList).getOrElse(List.empty[FileId])
+            val deps = Try(generalConfig.getStringList("deps").toList).getOrElse(List.empty[String])
             val schema = generalConfig.getString("fileType") match {
               case "fixed" =>
                 if (Try(generalConfig.getAnyRef("schema")).isSuccess) getFixedStructSchema(generalConfig)
@@ -204,7 +203,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
     * Parses metrics from configuration file
     * @return Map of (file_id, metric)
     */
-  private def getMetricsBySource: List[(FileId, Metric)] = {
+  private def getMetricsBySource: List[(String, Metric)] = {
     val metricsList: List[ConfigObject] = configObj.getObjectList("Metrics").toList
 
     val metricFileList: List[(String, Metric)] = metricsList.map {
@@ -273,7 +272,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
     * Parses checks connected with metric from configuration file
     * @return List of (Check, MetricId)
     */
-  private def getMetricByCheck: List[(Check, MetricId)] = {
+  private def getMetricByCheck: List[(Check, String)] = {
     val checksList: List[ConfigObject] = configObj.getObjectList("Checks").toList
 
     val metricListByCheck = checksList.flatMap {
@@ -287,7 +286,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
         val intConfig = outerConf.getObject("config").toConfig
 
         val params = getParams(intConfig)
-        val metricListByCheck: List[(Check, MetricId)] = checkType.toUpperCase match {
+        val metricListByCheck: List[(Check, String)] = checkType.toUpperCase match {
           case "SNAPSHOT" =>
             val metrics = intConfig.getStringList("metrics")
             val id = Try {
@@ -596,7 +595,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
     */
   private def getFixedSchema(inputConf: Config): Option[List[StructFixedColumn]] = {
     Try(inputConf.getStringList("fieldLengths").toList.map { str =>
-      val splitted: Array[FileId] = str.split(":")
+      val splitted: Array[String] = str.split(":")
       StructFixedColumn(splitted(0), "string", splitted(1).toInt)
     }).toOption
   }

@@ -12,10 +12,6 @@ import scala.collection.mutable
 object MetricProcessor extends Logging {
 
   // Some custom types to increase readability of the code
-
-  type MetricId = String
-  type FileId = String
-  type ColumnId = String
   type ParamMap = Map[String, Any]
 
   /**
@@ -33,7 +29,7 @@ object MetricProcessor extends Logging {
                         sourceKeyFields: Seq[String])(
                          implicit settings: DQSettings,
                          sparkContext: SparkContext)
-  : (Map[Seq[ColumnId], Map[ColumnMetric, (Double, Option[String])]],
+  : (Map[Seq[String], Map[ColumnMetric, (Double, Option[String])]],
     Map[FileMetric, (Double, Option[String])]) = {
 
     /**
@@ -68,7 +64,7 @@ object MetricProcessor extends Logging {
       {
         val calc = mm.name match {
           case "ROW_COUNT" => RowCountMetricCalculator(0) //return rows count
-          case x           => throw new IllegalParameterException(x)
+          case x           => throw IllegalParameterException(x)
         }
         mm -> calc
       }
@@ -90,7 +86,7 @@ object MetricProcessor extends Logging {
       *
       *          So in the end we are initializing only unique calculators.
       */
-    val metricsByColumn: Map[Seq[ColumnId], Seq[ColumnMetric]] =
+    val metricsByColumn: Map[Seq[String], Seq[ColumnMetric]] =
       colMetrics.groupBy(_.columns)
 
     val columnsIndexes: Map[String, Int] =
@@ -103,7 +99,7 @@ object MetricProcessor extends Logging {
     val dumpSize = settings.errorDumpSize
 
     val groupedCalculators
-    : Map[Seq[ColumnId], Seq[(MetricCalculator, Seq[ColumnMetric])]] =
+    : Map[Seq[String], Seq[(MetricCalculator, Seq[ColumnMetric])]] =
       metricsByColumn.map {
         case (colId, metList) =>
           colId -> metList
@@ -129,7 +125,7 @@ object MetricProcessor extends Logging {
         mutable.ArrayBuffer.empty[(String, String)])
 
     val (columnMetricCalculators, fileMetricCalculators): (Map[
-      Seq[ColumnId],
+      Seq[String],
       Seq[
         (MetricCalculator,
           Seq[
@@ -140,13 +136,13 @@ object MetricProcessor extends Logging {
       df.rdd.treeAggregate((groupedCalculators, fileMetCalculators))(
         seqOp = {
           case ((
-            colMetCalcs: Map[Seq[ColumnId],
+            colMetCalcs: Map[Seq[String],
               Seq[(MetricCalculator, Seq[ColumnMetric])]],
             fileMetCalcs: Map[FileMetric, MetricCalculator]
             ),
           row: Row) =>
             val updatedColRes
-            : Map[Seq[ColumnId], Seq[(MetricCalculator, Seq[ColumnMetric])]] =
+            : Map[Seq[String], Seq[(MetricCalculator, Seq[ColumnMetric])]] =
               colMetCalcs.map(m => {
                 val ids: Seq[Int] = m._1.map(x => columnsIndexes(x))
                 val columnValues: Seq[Any] = ids.map(id => row.get(id))
@@ -184,7 +180,7 @@ object MetricProcessor extends Logging {
         },
         combOp = (r, l) => {
           val colMerged
-          : Map[Seq[ColumnId], Seq[(MetricCalculator, Seq[ColumnMetric])]] =
+          : Map[Seq[String], Seq[(MetricCalculator, Seq[ColumnMetric])]] =
             l._1.map(c => {
               val zipedCalcs: Seq[((MetricCalculator, Seq[ColumnMetric]),
                 (MetricCalculator, Seq[ColumnMetric]))] = r
@@ -241,7 +237,7 @@ object MetricProcessor extends Logging {
     fileMetricCalculators.map(x => x._1 -> x._2.result()(x._1.name))
 
     // init list of all metrics per column
-    val resultsMap: Map[Seq[ColumnId], Map[String, (Double, Option[String])]] =
+    val resultsMap: Map[Seq[String], Map[String, (Double, Option[String])]] =
       columnMetricCalculators.map { colres =>
         val resMap: Map[String, (Double, Option[String])] =
           colres._2.flatMap(calc => calc._1.result()).toMap
@@ -253,7 +249,7 @@ object MetricProcessor extends Logging {
       * template "{metric_name}:{metric_params}_{index}" is used to link in that situation
       */
     // process metrics (SPLIT)
-    val processedMetrics: Map[Seq[ColumnId], Seq[ColumnMetric]] =
+    val processedMetrics: Map[Seq[String], Seq[ColumnMetric]] =
     metricsByColumn.map(col => {
 
       def splitMetric(baseMetric: ColumnMetric,
@@ -292,7 +288,7 @@ object MetricProcessor extends Logging {
 
     // combine column metrics and results
     val unitedMetricResult
-    : Map[Seq[ColumnId], Map[ColumnMetric, (Double, Option[String])]] =
+    : Map[Seq[String], Map[ColumnMetric, (Double, Option[String])]] =
       processedMetrics.map(colmet => {
         val resMap: Map[String, (Double, Option[String])] =
           resultsMap(colmet._1)
