@@ -5,7 +5,6 @@ import java.sql.Connection
 import it.agilelab.bigdata.DataQuality.checks.CheckResult
 import it.agilelab.bigdata.DataQuality.configs.ConfigReader
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
-import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.{ColumnId, FileId}
 import it.agilelab.bigdata.DataQuality.metrics.{ComposedMetricCalculator, _}
 import it.agilelab.bigdata.DataQuality.sources.VirtualSourceProcessor.getActualSources
 import it.agilelab.bigdata.DataQuality.sources._
@@ -59,7 +58,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
       * LOAD SOURCES
       */
     log.info(s"\n# Connecting to external databases...")
-    val dbConnections: Map[FileId, Connection] =
+    val dbConnections: Map[String, Connection] =
       configuration.dbConfigMap.flatMap({ db =>
         log.info("Trying to connect to " + db._1)
         val res = Try(db._1 -> db._2.getConnection).toOption
@@ -113,7 +112,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
       .flatten
 
     val sourceMap: Map[String, Source] = sources.map(x => (x.id, x)).toMap
-    val vsToSave: Set[FileId] =
+    val vsToSave: Set[String] =
       configuration.virtualSourcesConfigMap.filter(p => p._2.isSave).keys.toSet
     val virtualSources: Seq[Source] = getActualSources(
       configuration.virtualSourcesConfigMap,
@@ -125,7 +124,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     log.info(s"\n# Starting metrics processing...")
     val allMetrics
       : Seq[(String,
-             Map[Seq[ColumnId], Map[ColumnMetric, (Double, Option[String])]],
+             Map[Seq[String], Map[ColumnMetric, (Double, Option[String])]],
              Map[FileMetric, (Double, Option[String])])] =
       virtualSources.map(source => {
 
@@ -180,12 +179,12 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
         if (fileMetrics.isEmpty && colMetrics.isEmpty) {
           (source.id,
            Map
-             .empty[Seq[ColumnId], Map[ColumnMetric, (Double, Option[String])]],
+             .empty[Seq[String], Map[ColumnMetric, (Double, Option[String])]],
            Map.empty[FileMetric, (Double, Option[String])] empty)
         } else {
           //compute all metrics
           val results
-            : (Map[Seq[ColumnId], Map[ColumnMetric, (Double, Option[String])]],
+            : (Map[Seq[String], Map[ColumnMetric, (Double, Option[String])]],
                Map[FileMetric, (Double, Option[String])]) =
             MetricProcessor.processAllMetrics(source.df,
                                               colMetrics,
@@ -320,7 +319,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     sqlWriter.saveResultsToDB(finalCheckResults, "results_check")
 
     val targetResultMap
-      : Map[ColumnId, Seq[Product with Serializable with TypedResult]] = Map(
+      : Map[String, Seq[Product with Serializable with TypedResult]] = Map(
       "COLUMNAR-METRICS" -> colMetricResultsList,
       "FILE-METRICS" -> fileMetricResultsList,
       "CHECKS" -> finalCheckResults,

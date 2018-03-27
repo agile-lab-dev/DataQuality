@@ -1,6 +1,5 @@
 package it.agilelab.bigdata.DataQuality.sources
 
-import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.FileId
 import it.agilelab.bigdata.DataQuality.utils._
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
@@ -12,13 +11,13 @@ import scala.collection.JavaConversions.asJavaCollection
 
 object VirtualSourceProcessor {
 
-  def getActualSources(initialVirtualSourcesMap: Map[FileId, VirtualFile],
+  def getActualSources(initialVirtualSourcesMap: Map[String, VirtualFile],
                        initialSourceMap: Map[String, Source])(
       implicit sqlContext: SQLContext,
       settings: DQSettings): Map[String, Source] = {
 
     @scala.annotation.tailrec
-    def loop(virtualSourcesMap: Map[FileId, VirtualFile],
+    def loop(virtualSourcesMap: Map[String, VirtualFile],
              actualSourcesMapAccumulator: Map[String, Source])(
         implicit sqlContext: SQLContext): Map[String, Source] = {
 
@@ -31,7 +30,7 @@ object VirtualSourceProcessor {
       if (virtualSourcesMap.isEmpty) {
         actualSourcesMapAccumulator
       } else {
-        val firstLevelVirtualSources: Map[FileId, VirtualFile] =
+        val firstLevelVirtualSources: Map[String, VirtualFile] =
           virtualSourcesMap.filter {
             case (sourceId, conf: VirtualFile) =>
               val parentIds = conf.parentSourceIds
