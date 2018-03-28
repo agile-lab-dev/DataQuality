@@ -1,5 +1,3 @@
-import java.util.Locale
-
 import com.typesafe.config._
 import it.agilelab.bigdata.DataQuality.configs.ConfigReader
 import it.agilelab.bigdata.DataQuality.metrics.{ColumnMetric, FileMetric, MetricProcessor}

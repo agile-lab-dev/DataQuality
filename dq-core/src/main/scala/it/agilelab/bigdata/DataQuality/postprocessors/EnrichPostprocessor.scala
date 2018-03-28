@@ -6,7 +6,6 @@ import com.typesafe.config.Config
 import it.agilelab.bigdata.DataQuality.checks.CheckResult
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
 import it.agilelab.bigdata.DataQuality.metrics.MetricResult
-import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.FileId
 import it.agilelab.bigdata.DataQuality.sources.HdfsFile
 import it.agilelab.bigdata.DataQuality.targets.HdfsTargetConfig
 import it.agilelab.bigdata.DataQuality.utils
@@ -22,9 +21,9 @@ import scala.util.Try
 final class EnrichPostprocessor(config: Config)
     extends BasicPostprocessor(config) {
 
-  private val vs: Option[FileId] = Try(config.getString("source")).toOption
-  private val metrics: util.List[FileId] = config.getStringList("metrics")
-  private val checks: util.List[FileId] = config.getStringList("checks")
+  private val vs: Option[String] = Try(config.getString("source")).toOption
+  private val metrics: util.List[String] = config.getStringList("metrics")
+  private val checks: util.List[String] = config.getStringList("checks")
   private val extra = config.getObject("extra").toMap
 
   private val target: HdfsTargetConfig = {

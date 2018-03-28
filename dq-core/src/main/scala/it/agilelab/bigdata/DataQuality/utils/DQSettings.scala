@@ -24,7 +24,7 @@ class DQSettings(conf: Config,
 
   def this(commandLineOpts: DQCommandLineOptions) {
     this(
-      ConfigFactory.parseFile(new File(commandLineOpts.applicationConf)).getConfig("dataquality"),
+      ConfigFactory.parseFile(new File(commandLineOpts.applicationConf)).getConfig("dataquality").resolve(),
       commandLineOpts.configFilePath,
       commandLineOpts.repartition,
       commandLineOpts.local,
