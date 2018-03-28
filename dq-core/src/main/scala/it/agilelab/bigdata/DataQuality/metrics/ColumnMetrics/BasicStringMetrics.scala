@@ -72,7 +72,7 @@ object BasicStringMetrics {
     }
 
     override def result(): Map[String, (Double, Option[String])] =
-      Map("REGEX_VALUES" -> (cnt.toDouble, None))
+      Map("REGEX_VALUES" + getParametrizedMetricTail(paramMap) -> (cnt.toDouble, None))
 
     override def merge(m2: MetricCalculator): MetricCalculator =
       RegexValuesMetricCalculator(
