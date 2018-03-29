@@ -4,12 +4,8 @@ import java.sql.Connection
 
 import com.typesafe.config.Config
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
-import it.agilelab.bigdata.DataQuality.utils.io.db.readers.{
-  ORCLReader,
-  PostgresReader,
-  SQLiteReader,
-  TableReader
-}
+import it.agilelab.bigdata.DataQuality.utils
+import it.agilelab.bigdata.DataQuality.utils.io.db.readers.{ORCLReader, PostgresReader, SQLiteReader, TableReader}
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
 import scala.util.Try
@@ -60,5 +56,5 @@ case class DatabaseConfig(
                user: Option[String] = this.user,
                password: Option[String] = this.password)(
                 implicit sqlContext: SQLContext): DataFrame =
-    dbReader.loadData(schema.getOrElse("")+table, user, password)
+    dbReader.loadData(utils.makeTableName(schema, table), user, password)
 }
