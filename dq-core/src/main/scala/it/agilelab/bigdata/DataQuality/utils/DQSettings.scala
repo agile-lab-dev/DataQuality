@@ -49,6 +49,7 @@ class DQSettings(conf: Config,
   val errorDumpSize: Int = Try(conf.getInt("errorDumpSize")).toOption.getOrElse(1000)
   val errorFolderPath: Option[String] = Try(conf.getString("errorFolderPath")).toOption
   val hiveDir: String = Try(conf.getString("hiveDir")).toOption.getOrElse("")
+  val hbaseHost: String = Try(conf.getString("hbaseDir")).toOption.getOrElse("")
   val hadoopConfDir: String = Try(conf.getString("hadoopConfDir")).toOption.getOrElse("")
   val mailingMode: String = Try(conf.getString("mailing.mode").toLowerCase).getOrElse("internal")
   val mailingConfig: Option[Mailer] = {

@@ -6,6 +6,9 @@ import it.agilelab.bigdata.DataQuality.sources.SourceTypes.SourceType
 import it.agilelab.bigdata.DataQuality.targets.HdfsTargetConfig
 import it.agilelab.bigdata.DataQuality.utils.DQSettings
 import org.apache.spark.sql.DataFrame
+import scala.reflect._
+
+import scala.reflect.ClassTag
 
 /**
   * Created by Gianvito Siciliano on 03/01/17.
@@ -19,11 +22,24 @@ object SourceTypes extends Enumeration {
   val output: SourceType = Value("OUTPUT")
   val virtual: SourceType = Value("VIRTUAL")
   val hive: SourceType = Value("HIVE")
+  val hbase: SourceType = Value("HBASE")
 }
 
 abstract class SourceConfig {
   def getType: SourceType
   def keyfields: Seq[String]
+}
+
+case class HBaseSrcConfig(
+                       id: String,
+                       table: String,
+                       hbaseColumns: Seq[String],
+//                       dfColumns: Seq[String],
+                       keyfields: Seq[String] = Seq.empty,
+                       save: Boolean = false
+                       ) extends SourceConfig {
+  override def getType: SourceType = SourceTypes.hbase
+  def getClassTag = classTag[(String, String)]
 }
 
 abstract class VirtualFile(id: String,

@@ -56,6 +56,7 @@ val core = (project in file("dq-core"))
       //  "postgresql" % "postgresql" % "9.3-1102.jdbc41",
       "com.twitter" %% "algebird-core" % "0.13.0",
       "org.apache.commons" % "commons-email" % "1.4",
+      "it.nerdammer.bigdata" % "spark-hbase-connector_2.10" % "1.0.3",
       "org.scalatest" %% "scalatest" % "2.2.1" % "test"
     ),
     unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/resources"),
