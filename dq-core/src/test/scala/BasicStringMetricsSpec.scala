@@ -18,12 +18,6 @@ class BasicStringMetricsSpec extends WordSpec with Matchers {
       }
     }
 
-    "contain REGEX_VALUES in result" in {
-      val params: Map[String, Any] = Map("regex" -> "*")
-      val metric = new RegexValuesMetricCalculator(params)
-      assert(metric.result().keySet == Set("REGEX_VALUES"))
-    }
-
     "returns correct score" in {
       val params: Map[String, Any] = Map("regex" -> "^[a-z0-9_-]{1,15}$")
       val times: Int = 10
@@ -31,7 +25,7 @@ class BasicStringMetricsSpec extends WordSpec with Matchers {
       val updated = values.foldLeft[MetricCalculator](
         new RegexValuesMetricCalculator(params))((met, v) =>
         met.increment(Seq(v)))
-      assert(updated.result()("REGEX_VALUES")._1 == times)
+      assert(updated.result()("REGEX_VALUES:^[a-z0-9_-]{1,15}$")._1 == times)
     }
   }
 

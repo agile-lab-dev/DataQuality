@@ -14,8 +14,12 @@ import it.agilelab.bigdata.DataQuality.utils.io.{HdfsReader, HdfsWriter, HiveRea
 import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.hive.HiveContext
-import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import it.nerdammer.spark.hbase._
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
+import scala.reflect.ClassTag
 import scala.util.{Failure, Success, Try}
 
 /**
@@ -84,6 +88,19 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
                 .loadHiveTable(hiveTableConfig)(hiveContext)
                 .map(df =>
                   Source(source, settings.refDateString, df, conf.keyfields))
+              // HBASE--------
+            case hbConf: HBaseSrcConfig =>
+              println(hbConf)
+              val updated: Seq[String] = Seq("row") ++ hbConf.hbaseColumns
+              println(updated)
+              val struct = StructType(updated.map(StructField(_, StringType)))
+              val hbdf: RDD[Row] =
+                sparkContext.hbaseTable[(String, Option[String], Option[String], Option[String])](hbConf.table)
+                  .select(hbConf.hbaseColumns:_*).map(Row.fromTuple(_))
+              val df = sqlContext.createDataFrame(hbdf, struct)
+              df.show(10)
+              throw IllegalParameterException(hbConf.id)
+              // HBASE--------
             case outputFile: OutputFile =>
               val output = HdfsReader
                 .loadOutput(outputFile)

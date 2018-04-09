@@ -129,6 +129,11 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
             val query = generalConfig.getString("query")
 
             id -> HiveTableConfig(id, date, query,keyFieldList)
+          case "HBASE" =>
+            val id = generalConfig.getString("id")
+            val table = generalConfig.getString("table")
+            val hbColumns = generalConfig.getStringList("hbaseColumns")
+            id -> HBaseSrcConfig(id, table, hbColumns)
           case x => throw IllegalParameterException(x)
         }
     }.toMap
