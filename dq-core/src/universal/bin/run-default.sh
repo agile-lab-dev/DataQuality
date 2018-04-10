@@ -26,7 +26,7 @@ export INPUT_DIR=${DATA_DIR}
 export OUTPUT_BASE=
 
 ######DATA QUALITY PARAMETERS
-HIVE_PATH=user/hive/warehouse/
+export HIVE_PATH=user/hive/warehouse/
 
 START_TIME=$(date +"%d-%m-%Y %T")
 start_time_seconds=$(date +%s)
