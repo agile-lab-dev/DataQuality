@@ -132,7 +132,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
           case "HBASE" =>
             val id = generalConfig.getString("id")
             val table = generalConfig.getString("table")
-            val hbColumns = generalConfig.getStringList("hbaseColumns")
+            val hbColumns = generalConfig.getStringList("columns")
             id -> HBaseSrcConfig(id, table, hbColumns)
           case x => throw IllegalParameterException(x)
         }
