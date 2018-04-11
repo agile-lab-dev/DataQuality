@@ -466,30 +466,26 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
     * @return mapped parameter
     */
   private def getParams(ccf: Config): Map[String, Any] = {
-    import scala.collection.JavaConverters._
-
-    Try {
-      ccf.getObject("params")
-    }.toOption match {
+    Try { ccf.getConfig("params") }.toOption match {
       case Some(p) =>
         (for {
-          entry: Entry[String, ConfigValue] <- p.entrySet().asScala
+          entry: Entry[String, ConfigValue] <- p.entrySet()
           key = entry.getKey
           value = key match {
-            case "threshold" => entry.getValue.unwrapped().toString.toDouble
-            case "timewindow" => entry.getValue.unwrapped().toString.toInt
-            case "compareMetric" => entry.getValue.unwrapped().toString
-            case "compareValue" => entry.getValue.unwrapped().toString
-            case "targetValue" => entry.getValue.unwrapped().toString
-            case "maxCapacity" => entry.getValue.unwrapped().toString.toInt
-            case "accuracyError" => entry.getValue.unwrapped().toString.toDouble
-            case "targetNumber" => entry.getValue.unwrapped().toString.toInt
-            case "targetSideNumber" => entry.getValue.unwrapped().toString.toDouble // move to irrelevant params
-            case "domain" => entry.getValue.unwrapped().asInstanceOf[java.util.ArrayList[String]].asScala.toSet
-            case "startDate" => entry.getValue.unwrapped().toString
-            case "compRule" => entry.getValue.unwrapped().toString
-            case "dateFormat" => entry.getValue.unwrapped().toString
-            case "regex" => entry.getValue.unwrapped().toString
+            case "threshold" => p.getDouble(key)
+            case "timewindow" => p.getInt(key)
+            case "compareMetric" => p.getString(key)
+            case "compareValue" => p.getString(key)
+            case "targetValue" => p.getString(key)
+            case "maxCapacity" => p.getInt(key)
+            case "accuracyError" => p.getDouble(key)
+            case "targetNumber" => p.getInt(key)
+            case "targetSideNumber" => p.getDouble(key) // move to irrelevant params
+            case "domain" => p.getStringList(key).toSet
+            case "startDate" => p.getString(key)
+            case "compRule" => p.getString(key)
+            case "dateFormat" => p.getString(key)
+            case "regex" => p.getString(key)
             case x =>
               log.error(s"${key.toUpperCase} is an unexpected parameters from config!")
               throw IllegalParameterException(x)
