@@ -345,7 +345,7 @@ object BasicNumericMetrics {
                                                   paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val domain = paramMap("domainSet").asInstanceOf[Set[Double]]
+    private val domain = paramMap("domain").asInstanceOf[Set[Double]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
@@ -385,7 +385,7 @@ object BasicNumericMetrics {
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val domain = paramMap("domainSet").asInstanceOf[Set[Double]]
+    private val domain = paramMap("domain").asInstanceOf[Set[Double]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)

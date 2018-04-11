@@ -343,7 +343,7 @@ object BasicStringMetrics {
                                                   paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val domain = paramMap("domainSet").asInstanceOf[Set[String]]
+    private val domain = paramMap("domain").asInstanceOf[Set[String]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
@@ -370,7 +370,7 @@ object BasicStringMetrics {
   }
 
   /**
-    * Caclulates amount of string out of provided domain
+    * Calculates amount of string out of provided domain
     * @param cnt Current count of filtered elements
     * @param paramMap Required configuration map. May contains:
     *   required "domainSet" - set of strings that represents the requested domain
@@ -382,7 +382,7 @@ object BasicStringMetrics {
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val domain: Set[String] = paramMap("domainSet").asInstanceOf[Set[String]]
+    private val domain: Set[String] = paramMap("domain").asInstanceOf[Set[String]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
