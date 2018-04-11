@@ -485,7 +485,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: LocalDBManager, s
             case "accuracyError" => entry.getValue.unwrapped().toString.toDouble
             case "targetNumber" => entry.getValue.unwrapped().toString.toInt
             case "targetSideNumber" => entry.getValue.unwrapped().toString.toDouble // move to irrelevant params
-            case "domainSet" => entry.getValue.unwrapped().toString.split(":").toSet
+            case "domain" => entry.getValue.unwrapped().asInstanceOf[java.util.ArrayList[String]].asScala.toSet
             case "startDate" => entry.getValue.unwrapped().toString
             case "compRule" => entry.getValue.unwrapped().toString
             case "dateFormat" => entry.getValue.unwrapped().toString
