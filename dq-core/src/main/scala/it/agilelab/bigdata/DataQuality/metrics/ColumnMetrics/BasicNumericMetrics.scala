@@ -345,7 +345,7 @@ object BasicNumericMetrics {
                                                   paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val values = paramMap("domainSet").asInstanceOf[Set[Double]]
+    private val domain = paramMap("domainSet").asInstanceOf[Set[Double]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
@@ -354,7 +354,7 @@ object BasicNumericMetrics {
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToDouble(values.head) match {
         case Some(v) =>
-          if (values.contains(v))
+          if (domain.contains(v))
             NumberInDomainValuesMetricCalculator(cnt + 1, paramMap)
           else this
         case None => this
@@ -385,7 +385,7 @@ object BasicNumericMetrics {
                                                    paramMap: ParamMap)
       extends MetricCalculator {
 
-    private val values = paramMap("domainSet").asInstanceOf[Set[Double]]
+    private val domain = paramMap("domainSet").asInstanceOf[Set[Double]]
 
     def this(paramMap: Map[String, Any]) {
       this(0, paramMap)
@@ -394,7 +394,7 @@ object BasicNumericMetrics {
     override def increment(values: Seq[Any]): MetricCalculator = {
       tryToDouble(values.head) match {
         case Some(v) =>
-          if (values.contains(v)) this
+          if (domain.contains(v)) this
           else NumberOutDomainValuesMetricCalculator(cnt + 1, paramMap)
         case None => this
       }
