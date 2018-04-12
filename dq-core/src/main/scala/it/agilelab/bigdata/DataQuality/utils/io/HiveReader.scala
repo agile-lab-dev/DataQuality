@@ -21,12 +21,12 @@ object HiveReader extends Logging {
     * @return result of the query
     */
   def loadHiveTable(inputConf: HiveTableConfig)(
-      implicit hiveContext: Option[HiveContext]): Seq[DataFrame] = {
+      implicit hiveContext: HiveContext): Seq[DataFrame] = {
 
     // You can specify a template for queries here. Currently it's just an input query as it is
     val full_query = inputConf.query
     Try {
-      Seq(hiveContext.get.sql(full_query))
+      Seq(hiveContext.sql(full_query))
     }.getOrElse({
       log.warn("Failed to load HIVE table")
       Seq.empty

@@ -1,6 +1,7 @@
 package it.agilelab.bigdata.DataQuality.sources
 
 import it.agilelab.bigdata.DataQuality.utils._
+import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
 
 import scala.collection.JavaConversions.asJavaCollection
@@ -13,8 +14,8 @@ object VirtualSourceProcessor {
 
   def getActualSources(initialVirtualSourcesMap: Map[String, VirtualFile],
                        initialSourceMap: Map[String, Source])(
-      implicit sqlContext: SQLContext,
-      settings: DQSettings): Map[String, Source] = {
+                        implicit sqlContext: HiveContext,
+                        settings: DQSettings): Map[String, Source] = {
 
     @scala.annotation.tailrec
     def loop(virtualSourcesMap: Map[String, VirtualFile],
