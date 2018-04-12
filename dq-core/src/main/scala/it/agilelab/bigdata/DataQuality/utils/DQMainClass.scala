@@ -20,9 +20,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
     Logger.getLogger("akka").setLevel(Level.OFF)
     Logger.getLogger("io.netty").setLevel(Level.OFF)
     Logger.getLogger("org.spark-project.jetty").setLevel(Level.OFF)
-    Logger
-      .getLogger("org.apache.hadoop.hdfs.KeyProviderCache")
-      .setLevel(Level.OFF)
+    Logger.getLogger("org.apache.hadoop.hdfs.KeyProviderCache").setLevel(Level.OFF)
   }
 
   private def makeFileSystem(sc: SparkContext) = {
@@ -70,9 +68,6 @@ trait DQMainClass { this: DQSparkContext with Logging =>
 
         log.info(s"Creating SparkContext, SqlContext and FileSystem...")
         val sparkContext = makeSparkContext(settings)
-//        val sqlContext = makeSqlContext(sparkContext)
-
-
         val sqlContext: SQLContext = if (settings.hiveDir.nonEmpty) {
           log.info(s"Hive context created with hive dir ${settings.hiveDir}")
           val hc =  new HiveContext(sparkContext)
