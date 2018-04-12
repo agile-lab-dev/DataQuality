@@ -33,7 +33,6 @@ trait DQMainClass { this: DQSparkContext with Logging =>
   protected def body()(implicit fs: FileSystem,
                        sparkContext: SparkContext,
                        sqlContext: SQLContext,
-                       hiveContext: HiveContext,
                        sqlWriter: LocalDBManager,
                        settings: DQSettings): Boolean
 
@@ -71,12 +70,16 @@ trait DQMainClass { this: DQSparkContext with Logging =>
 
         log.info(s"Creating SparkContext, SqlContext and FileSystem...")
         val sparkContext = makeSparkContext(settings)
-        val sqlContext = makeSqlContext(sparkContext)
-        val hiveContext =  new HiveContext(sparkContext)
+//        val sqlContext = makeSqlContext(sparkContext)
 
-        if (settings.hiveDir.nonEmpty) {
-          hiveContext.setConf("hive.metastore.warehouse.dir", settings.hiveDir)
-          log.info(s"Hive context hive dir  ${settings.hiveDir} set")
+
+        val sqlContext: SQLContext = if (settings.hiveDir.nonEmpty) {
+          log.info(s"Hive context created with hive dir ${settings.hiveDir}")
+          val hc =  new HiveContext(sparkContext)
+          hc.setConf("hive.metastore.warehouse.dir", settings.hiveDir)
+          hc
+        } else {
+          makeSqlContext(sparkContext)
         }
 
         val fs = makeFileSystem(sparkContext)
@@ -84,7 +87,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
 
         preMessage(s"{${settings.appName}}")
         val startTime = System.currentTimeMillis()
-        body()(fs, sparkContext, sqlContext, hiveContext, localSqlWriter, settings)
+        body()(fs, sparkContext, sqlContext, localSqlWriter, settings)
         postMessage(s"{${settings.appName}}")
 
         log.info(

@@ -27,7 +27,6 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
   override protected def body()(implicit fs: FileSystem,
                                 sparkContext: SparkContext,
                                 sqlContext: SQLContext,
-                                hiveContext: HiveContext,
                                 sqlWriter: LocalDBManager,
                                 settings: DQSettings): Boolean = {
 
@@ -67,19 +66,26 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     val sources: Seq[Source] = configuration.sourcesConfigMap
       .map {
         case (source, conf) =>
-//        val keyFieldOpt=if(conf.keyfields) Some(conf.keyfields) else None
+          //        val keyFieldOpt=if(conf.keyfields) Some(conf.keyfields) else None
           conf match {
             case hdfsFile: HdfsFile =>
               HdfsReader
                 .load(hdfsFile, settings.ref_date)
                 .map(df => Source(source, hdfsFile.date, df, conf.keyfields))
             case hiveTableConfig: HiveTableConfig =>
-              HiveReader
-                .loadHiveTable(hiveTableConfig)(hiveContext)
-                .map(df =>
-                  Source(source, settings.refDateString, df, conf.keyfields))
+              sqlContext match {
+                case hc: HiveContext =>
+                  HiveReader.loadHiveTable(hiveTableConfig)(hc).map(df =>
+                    Source(source, settings.refDateString, df, conf.keyfields))
+                case _ =>
+                  throw IllegalParameterException("Hive context wasn't set properly. Check your application.conf")
+              }
             case hbConf: HBaseSrcConfig =>
-              Seq(Source(source, settings.refDateString, HBaseLoader.loadToDF(hbConf), conf.keyfields))
+              Seq(
+                Source(source,
+                       settings.refDateString,
+                       HBaseLoader.loadToDF(hbConf),
+                       conf.keyfields))
             case outputFile: OutputFile =>
               val output = HdfsReader
                 .loadOutput(outputFile)
