@@ -7,6 +7,7 @@ import org.apache.hadoop.fs.FileSystem
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.hive.HiveContext
 
 /**
   * Created by Paolo on 20/01/2017.
@@ -32,6 +33,7 @@ trait DQMainClass { this: DQSparkContext with Logging =>
   protected def body()(implicit fs: FileSystem,
                        sparkContext: SparkContext,
                        sqlContext: SQLContext,
+                       hiveContext: HiveContext,
                        sqlWriter: LocalDBManager,
                        settings: DQSettings): Boolean
 
@@ -70,12 +72,19 @@ trait DQMainClass { this: DQSparkContext with Logging =>
         log.info(s"Creating SparkContext, SqlContext and FileSystem...")
         val sparkContext = makeSparkContext(settings)
         val sqlContext = makeSqlContext(sparkContext)
+        val hiveContext =  new HiveContext(sparkContext)
+
+        if (settings.hiveDir.nonEmpty) {
+          hiveContext.setConf("hive.metastore.warehouse.dir", settings.hiveDir)
+          log.info(s"Hive context hive dir  ${settings.hiveDir} set")
+        }
+
         val fs = makeFileSystem(sparkContext)
         val localSqlWriter = new LocalDBManager(settings)
 
         preMessage(s"{${settings.appName}}")
         val startTime = System.currentTimeMillis()
-        body()(fs, sparkContext, sqlContext, localSqlWriter, settings)
+        body()(fs, sparkContext, sqlContext, hiveContext, localSqlWriter, settings)
         postMessage(s"{${settings.appName}}")
 
         log.info(
