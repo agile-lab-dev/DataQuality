@@ -7,6 +7,7 @@ import org.apache.hadoop.fs.FileSystem
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
+import org.apache.spark.sql.hive.HiveContext
 
 /**
   * Created by Paolo on 20/01/2017.
@@ -69,7 +70,18 @@ trait DQMainClass { this: DQSparkContext with Logging =>
 
         log.info(s"Creating SparkContext, SqlContext and FileSystem...")
         val sparkContext = makeSparkContext(settings)
-        val sqlContext = makeSqlContext(sparkContext)
+//        val sqlContext = makeSqlContext(sparkContext)
+
+
+        val sqlContext: SQLContext = if (settings.hiveDir.nonEmpty) {
+          log.info(s"Hive context created with hive dir ${settings.hiveDir}")
+          val hc =  new HiveContext(sparkContext)
+          hc.setConf("hive.metastore.warehouse.dir", settings.hiveDir)
+          hc
+        } else {
+          makeSqlContext(sparkContext)
+        }
+
         val fs = makeFileSystem(sparkContext)
         val localSqlWriter = new LocalDBManager(settings)
 

@@ -13,8 +13,8 @@ object VirtualSourceProcessor {
 
   def getActualSources(initialVirtualSourcesMap: Map[String, VirtualFile],
                        initialSourceMap: Map[String, Source])(
-      implicit sqlContext: SQLContext,
-      settings: DQSettings): Map[String, Source] = {
+                        implicit sqlContext: SQLContext,
+                        settings: DQSettings): Map[String, Source] = {
 
     @scala.annotation.tailrec
     def loop(virtualSourcesMap: Map[String, VirtualFile],
