@@ -16,9 +16,6 @@ import org.apache.hadoop.fs.FileSystem
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
-import it.nerdammer.spark.hbase._
-import org.apache.spark.rdd.RDD
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
 
 import scala.util.{Failure, Success, Try}
 
@@ -38,14 +35,6 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
       *
       */
     val configuration = new ConfigReader(settings.configFilePath)
-
-    // Initialized here because it's app specific, option and related to sqlContext
-    val hiveContext: Option[HiveContext] = if (!settings.hiveDir.isEmpty) {
-      val hc = new HiveContext(sqlContext.sparkContext)
-      hc.setConf("hive.metastore.warehouse.dir", settings.hiveDir)
-      log.info(s"Hive context for ${settings.hiveDir} created")
-      Some(hc)
-    } else None
 
     log.info("\n EXTERNAL DATABASES:")
     log.info(configuration.dbConfigMap.mkString(" \n "))
@@ -77,19 +66,26 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     val sources: Seq[Source] = configuration.sourcesConfigMap
       .map {
         case (source, conf) =>
-//        val keyFieldOpt=if(conf.keyfields) Some(conf.keyfields) else None
+          //        val keyFieldOpt=if(conf.keyfields) Some(conf.keyfields) else None
           conf match {
             case hdfsFile: HdfsFile =>
               HdfsReader
                 .load(hdfsFile, settings.ref_date)
                 .map(df => Source(source, hdfsFile.date, df, conf.keyfields))
             case hiveTableConfig: HiveTableConfig =>
-              HiveReader
-                .loadHiveTable(hiveTableConfig)(hiveContext)
-                .map(df =>
-                  Source(source, settings.refDateString, df, conf.keyfields))
+              sqlContext match {
+                case hc: HiveContext =>
+                  HiveReader.loadHiveTable(hiveTableConfig)(hc).map(df =>
+                    Source(source, settings.refDateString, df, conf.keyfields))
+                case _ =>
+                  throw IllegalParameterException("Hive context wasn't set properly. Check your application.conf")
+              }
             case hbConf: HBaseSrcConfig =>
-              Seq(Source(source, settings.refDateString, HBaseLoader.loadToDF(hbConf), conf.keyfields))
+              Seq(
+                Source(source,
+                       settings.refDateString,
+                       HBaseLoader.loadToDF(hbConf),
+                       conf.keyfields))
             case outputFile: OutputFile =>
               val output = HdfsReader
                 .loadOutput(outputFile)
