@@ -8,7 +8,7 @@ import src.main.scala.BuildIntegrationPlugin.autoImport.{IntegrationEnv, integra
 name := "DataQuality-framework"
 
 lazy val commonSettings = Seq(
-  version := "2.0.1"
+  version := "0.2.1"
 )
 
 scalacOptions ++= Seq(
