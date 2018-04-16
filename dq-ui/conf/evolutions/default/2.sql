@@ -29,7 +29,7 @@ insert into meta_metric (name, type, is_statusable, is_multicolumn, description)
   ('AVG_NUMBER','COLUMN',TRUE,FALSE,'Returns average of all numerical value inside of the column'),
   ('STD_NUMBER','COLUMN',TRUE,FALSE,'Returns standard deviation of all numerical value inside of the column'),
   ('MIN_STRING','COLUMN',TRUE,FALSE,'Return string minimum of the column (mostly for comaparing dates)'),
-  ('MAN_STRING','COLUMN',TRUE,FALSE,'Returns average string length'),
+  ('MAX_STRING','COLUMN',TRUE,FALSE,'Returns average string length'),
   ('FORMATTED_DATE','COLUMN',TRUE,FALSE,'Returns amount of values in priovided format'),
   ('FORMATTED_NUMBER','COLUMN',TRUE,FALSE,'Returns amount of values in priovided format'),
   ('FORMATTED_STRING','COLUMN',TRUE,FALSE,'Returns amount of values in priovided format'),
@@ -46,8 +46,6 @@ insert into meta_metric (name, type, is_statusable, is_multicolumn, description)
   ('GET_QUANTILE','COLUMN',TRUE,FALSE,'Returns custom quantile'),
   ('GET_PERCENTILE','COLUMN',TRUE,FALSE,'Return custom percentile '),
   ('TOP_N','COLUMN',TRUE,FALSE,'Returns approximate TOP N frequent values inside of the column  ');
-
-
 
 
 DROP TABLE IF EXISTS meta_metric_parameters CASCADE;
@@ -71,10 +69,10 @@ insert into meta_metric_parameters (metric, name, type, is_optional, description
   ('FORMATTED_NUMBER','precision','DOUBLE', FALSE, 'Provided precision '),
   ('FORMATTED_NUMBER','scale','DOUBLE', FALSE, 'Provided scale'),
   ('FORMATTED_STRING','length','STRING', FALSE, 'Length for strings'),
-  ('NUMBER_IN_DOMAIN','domainSet','STRING', FALSE, 'Domain for checking'),
-  ('NUMBER_OUT_DOMAIN','domainSet','STRING', FALSE, 'Domain for checking'),
-  ('STRING_IN_DOMAIN','domainSet','STRING', FALSE, 'Domain for checking (example {domainSet: "NST:VST:BTH:ANY"})'),
-  ('STRING_OUT_DOMAIN','domainSet','STRING', FALSE, 'Returns amount of values outside of provided domain'),
+  ('NUMBER_IN_DOMAIN','domain','STRING', FALSE, 'Domain for checking'),
+  ('NUMBER_OUT_DOMAIN','domain','STRING', FALSE, 'Domain for checking'),
+  ('STRING_IN_DOMAIN','domain','STRING', FALSE, 'Domain for checking (example {domain: "NST:VST:BTH:ANY"})'),
+  ('STRING_OUT_DOMAIN','domain','STRING', FALSE, 'Returns amount of values outside of provided domain'),
   ('STRING_VALUES','compareValue','STRING', FALSE, 'String for search'),
   ('NUMBER_VALUES','compareValue','STRING', FALSE, 'Number for search '),
   ('MEDIAN_VALUE','accuracyError','DOUBLE', TRUE, 'Less is more '),
@@ -85,36 +83,4 @@ insert into meta_metric_parameters (metric, name, type, is_optional, description
   ('GET_PERCENTILE','accuracyError','DOUBLE', TRUE, 'Less is more '),
   ('GET_PERCENTILE','targetSideNumber','DOUBLE', FALSE, 'Provided value for quantile (should be in [0,1]) '),
   ('TOP_N','maxCapacity','INTEGER', TRUE, 'Size of aggregation collection '),
-  ('TOP_N','targetNumber','INTEGER', FALSE, 'Requested N ');
-
--- "DISTINCT_VALUES"
--- "APPROXIMATE_DISTINCT_VALUES"
--- "NULL_VALUES"
--- "EMPTY_VALUES"
--- "MIN_NUMBER"
--- "MAX_NUMBER"
--- "SUM_NUMBER"
--- "AVG_NUMBER"
--- "STD_NUMBER"
--- "MIN_STRING"
--- "MAX_STRING"
--- "AVG_STRING"
--- "FORMATTED_DATE"
--- "FORMATTED_NUMBER"
--- "FORMATTED_STRING"
--- "CASTED_NUMBER"
--- "NUMBER_IN_DOMAIN"
--- "NUMBER_OUT_DOMAIN"
--- "STRING_IN_DOMAIN"
--- "STRING_OUT_DOMAIN"
--- "STRING_VALUES"
--- "NUMBER_VALUES"
--- "MEDIAN_VALUE"
--- "FIRST_QUANTILE"
--- "THIRD_QUANTILE"
--- "GET_QUANTILE"
--- "GET_PERCENTILE"
--- "TOP_N"
--- "COLUMN_EQ"
--- "DAY_DISTANCE"
--- "LEVENSHTEIN_DISTANCE"
+  ('TOP_N','targetNumber','INTEGER', FALSE, 'Requested N');
