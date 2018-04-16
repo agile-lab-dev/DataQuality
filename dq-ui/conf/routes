@@ -106,6 +106,9 @@ POST    /target/:id/check           controllers.targets.TargetAttachmentsControl
 GET     /target/:id/check           controllers.targets.TargetAttachmentsController.getTargetCheckList(id: String)
 DELETE  /target/:id/check           controllers.targets.TargetAttachmentsController.deleteTargetCheck(id: String)
 
+## Postprocessors
+GET     /postprocessor              controllers.postprocessors.PostprocessController.getAllPPs()
+
 ## Configs
 GET     /config                     controllers.config.ConfigController.downloadConfiguration
 POST    /config                     controllers.config.ConfigController.uploadConfiguration
