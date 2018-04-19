@@ -144,7 +144,8 @@ val ui = (project in file("dq-ui"))
         //test
         "org.webjars.npm" % "jasmine-core" % "2.6.4",
         "org.webjars.npm" % "ng2-file-upload" % "1.2.0",
-        "org.webjars.npm" % "file-saver" % "1.3.3"
+        "org.webjars.npm" % "file-saver" % "1.3.8",
+        "org.webjars.npm" % "types__file-saver" % "1.3.0"
       )
     },
     dependencyOverrides += "org.webjars.npm" % "minimatch" % "3.0.0",

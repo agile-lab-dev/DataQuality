@@ -207,6 +207,9 @@ export class MetricsComponent implements OnInit {
     if (metricType === Type.COLUMN) {
       const newColumnMetric = new MetricColumnFe(new metrics.MetricColumn('NEW METRIC'));
       newColumnMetric.isNew = true;
+      this.getParamField().then(params => {
+              newColumnMetric.paramFields = params
+      });
       this.columnMetrics.push(newColumnMetric);
     }
     if (metricType === Type.FILE) {

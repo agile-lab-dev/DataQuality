@@ -49,6 +49,12 @@ trait BasicEntity extends KeyedEntity[String] {
   def getType: String
 }
 
+trait EntityExtension extends KeyedEntity[String] {
+  def insert(): EntityExtension
+  def update(): EntityExtension
+  def rebase(id: String): EntityExtension
+}
+
 trait EntityParentEnumeration extends Enumeration {
   case class EntityParentVal(name: String, searchF: (String, String, Option[Enumeration#Value]) => Query[String]) extends super.Val() {
     override def toString(): String = this.name

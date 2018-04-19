@@ -48,7 +48,7 @@
             // other libraries
             'rxjs':                      'npm:rxjs',
             'angular-in-memory-web-api': 'npm:angular-in-memory-web-api/bundles/in-memory-web-api.umd.js',
-            'file-saver': 'npm:file-saver/FileSaver.min.js',
+            'file-saver': 'npm:file-saver',
             'ng2-file-upload': 'npm:ng2-file-upload/bundles/ng2-file-upload.umd.js',
 
             // change this paths only if you understand what you do!
@@ -83,7 +83,12 @@
             'codemirror/mode/sql/sql': {
                 main: '/mode/sql/sql.js',
                 defaultExtension: 'js'
-            }
+            },
+             'file-saver': {
+                    format: 'global',
+                    main: 'FileSaver.js',
+                    defaultExtension: 'js'
+             }
         }
     });
 })(this);

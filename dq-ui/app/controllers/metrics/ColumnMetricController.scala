@@ -46,6 +46,10 @@ class ColumnMetricController @Inject()() extends Controller {
   }
 
   def addColumnMetric() = Action { implicit request =>
+
+    import play.api.Logger
+    Logger.debug("TEST")
+
     val form = getMainForm().bindFromRequest
     form.value map { metric =>
       try {
@@ -76,6 +80,8 @@ class ColumnMetricController @Inject()() extends Controller {
   }
 
   def updateMetric(id: String) = Action { implicit request =>
+    println(request)
+    println(request.body)
     val form = getMainForm(Some(id)).bindFromRequest
     form.value map { metric =>
       inTransaction(try {
