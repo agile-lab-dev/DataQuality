@@ -3,7 +3,7 @@ import { Headers, Http, ResponseContentType } from '@angular/http';
 
 import 'rxjs/add/operator/toPromise';
 
-import * as saveAs from 'file-saver';
+import 'file-saver';
 
 @Injectable()
 export class ConfigService {
