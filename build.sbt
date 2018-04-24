@@ -7,9 +7,7 @@ import src.main.scala.BuildIntegrationPlugin.autoImport.{IntegrationEnv, integra
 
 name := "DataQuality-framework"
 
-lazy val commonSettings = Seq(
-  version := "0.2.1"
-)
+lazy val commonSettings = Seq(version := "0.2.1")
 
 scalacOptions ++= Seq(
   "-target:jvm-1.8",
@@ -17,10 +15,10 @@ scalacOptions ++= Seq(
   "-feature",
   "-language:implicitConversions",
   "-language:postfixOps",
-  "-language:reflectiveCalls"
+  "-language:reflectiveCalls",
+  "-Xmax-classfile-name", "225"
+//  "-Ypartial-unification"
 )
-
-scalacOptions ++= Seq("-Xmax-classfile-name", "225")
 
 resolvers ++= Seq(
   Resolver.bintrayRepo("webjars","maven"),
@@ -33,11 +31,22 @@ resolvers ++= Seq(
 
 //makeDeploymentSettings(Universal, packageBin in Universal, "zip")
 
-val core = (project in file("dq-core"))
+lazy val common = (project in file("dq-common"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe" % "config" % "1.3.1",
+      "org.typelevel" %% "cats-core" % "1.1.0"
+    )
+  )
+
+lazy val core = (project in file("dq-core"))
   .enablePlugins(UniversalPlugin, UniversalDeployPlugin)
   .settings(
-    commonSettings,
+//    inThisBuild(
+//      commonSettings ++ List(scalaVersion := "2.10.6")
+//    ),
     scalaVersion := "2.10.6",
+    commonSettings,
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % "1.6.0",
       "org.apache.spark" %% "spark-sql" % "1.6.0",
@@ -53,7 +62,6 @@ val core = (project in file("dq-core"))
       "org.isarnproject" %% "isarn-sketches" % "0.0.2",
       "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
       "org.postgresql" % "postgresql" % "42.1.1",
-      //  "postgresql" % "postgresql" % "9.3-1102.jdbc41",
       "com.twitter" %% "algebird-core" % "0.13.0",
       "org.apache.commons" % "commons-email" % "1.4",
       "it.nerdammer.bigdata" % "spark-hbase-connector_2.10" % "1.0.3",
@@ -89,11 +97,12 @@ val core = (project in file("dq-core"))
     }
   )
 
-val ui = (project in file("dq-ui"))
+lazy val ui = (project in file("dq-ui"))
   .enablePlugins(PlayScala)
   .settings(
-    commonSettings,
-    scalaVersion := "2.11.7",
+    inThisBuild(
+      commonSettings ++ List(scalaVersion := "2.11.12")
+    ),
     incOptions := incOptions.value.withNameHashing(true),
     updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true),
     //we use nodejs to make our typescript build as fast as possible
@@ -110,7 +119,7 @@ val ui = (project in file("dq-ui"))
         "com.gilt" % "jerkson_2.11" % "0.6.9",
         "org.webjars" %% "webjars-play" % "2.5.0",
         "org.postgresql" % "postgresql" % "42.1.1",
-        //  "postgresql" % "postgresql" % "9.3-1102.jdbc41",
+        "org.typelevel" %% "cats-core" % "1.1.0",
 
         //angular2 dependencies
         "org.webjars.npm" % "angular__common" % ngVersion,
@@ -168,7 +177,4 @@ val ui = (project in file("dq-ui"))
     logLevel in jasmine := Level.Info,
     logLevel in tslint := Level.Info,
     logLevel in typescript := Level.Info
-  )
-
-val root = (project in file("."))
-  .aggregate(core, ui)
+  ).dependsOn(common)
