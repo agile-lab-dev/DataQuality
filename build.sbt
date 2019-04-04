@@ -78,6 +78,7 @@ lazy val core = (project in file("dq-core"))
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = true),
     test in assembly := {},
     mappings in Universal += {
+      // TODO: Add paths application configuration files
       val confFile = buildEnv.value match {
         case BuildEnv.Dev => "path to application.conf"
         case BuildEnv.Test => "path to application.conf"
@@ -86,6 +87,7 @@ lazy val core = (project in file("dq-core"))
       ((resourceDirectory in Compile).value / confFile) -> "conf/application.conf"
     },
     mappings in Universal ++= {
+      // TODO: Add paths application integration files
       val integrationFolder = integrationEnv.value match {
         case IntegrationEnv.local => "path to integration directory"
       }
