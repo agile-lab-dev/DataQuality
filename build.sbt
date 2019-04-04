@@ -1,12 +1,13 @@
+import com.typesafe.sbt.packager.MappingsHelper.directory
 import sbt.GlobFilter
 import sbt.Keys.{logLevel, scalaVersion, test, updateOptions}
 import sbtassembly.AssemblyPlugin.autoImport.assemblyOption
+import src.main.scala.BuildEnvPlugin.autoImport.{BuildEnv, buildEnv}
+import src.main.scala.BuildIntegrationPlugin.autoImport.{IntegrationEnv, integrationEnv}
 
 name := "DataQuality-framework"
 
-lazy val commonSettings = Seq(
-  version := "1.0"
-)
+lazy val commonSettings = Seq(version := "0.2.1")
 
 scalacOptions ++= Seq(
   "-target:jvm-1.8",
@@ -14,10 +15,10 @@ scalacOptions ++= Seq(
   "-feature",
   "-language:implicitConversions",
   "-language:postfixOps",
-  "-language:reflectiveCalls"
+  "-language:reflectiveCalls",
+  "-Xmax-classfile-name", "225"
+//  "-Ypartial-unification"
 )
-
-scalacOptions ++= Seq("-Xmax-classfile-name", "225")
 
 resolvers ++= Seq(
   Resolver.bintrayRepo("webjars","maven"),
@@ -30,18 +31,27 @@ resolvers ++= Seq(
 
 //makeDeploymentSettings(Universal, packageBin in Universal, "zip")
 
-val core = (project in file("dq-core"))
+lazy val common = (project in file("dq-common"))
+  .settings(
+    libraryDependencies ++= Seq(
+      "com.typesafe" % "config" % "1.3.1",
+      "org.typelevel" %% "cats-core" % "1.1.0"
+    )
+  )
+
+lazy val core = (project in file("dq-core"))
   .enablePlugins(UniversalPlugin, UniversalDeployPlugin)
   .settings(
-    commonSettings,
+//    inThisBuild(
+//      commonSettings ++ List(scalaVersion := "2.10.6")
+//    ),
     scalaVersion := "2.10.6",
+    commonSettings,
     libraryDependencies ++= Seq(
       "org.apache.spark" %% "spark-core" % "1.6.0",
       "org.apache.spark" %% "spark-sql" % "1.6.0",
       "org.apache.spark" %% "spark-hive" % "1.6.0",
-
       "com.databricks" %% "spark-avro" % "2.0.1",
-      "org.scalatest" %% "scalatest" % "2.2.1" % "test",
       "com.databricks" %% "spark-csv" % "1.5.0",
       "org.apache.commons" % "commons-lang3" % "3.0",
       "joda-time" % "joda-time" % "2.9.9",
@@ -52,10 +62,13 @@ val core = (project in file("dq-core"))
       "org.isarnproject" %% "isarn-sketches" % "0.0.2",
       "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
       "org.postgresql" % "postgresql" % "42.1.1",
-      //  "postgresql" % "postgresql" % "9.3-1102.jdbc41",
       "com.twitter" %% "algebird-core" % "0.13.0",
-      "org.apache.commons" % "commons-email" % "1.4"
+      "org.apache.commons" % "commons-email" % "1.4",
+      "it.nerdammer.bigdata" % "spark-hbase-connector_2.10" % "1.0.3",
+      "org.scalatest" %% "scalatest" % "2.2.1" % "test"
     ),
+    unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/resources"),
+    excludeFilter in Compile in unmanagedResources := "*",
     unmanagedJars in Compile += file("dq-core/lib/ojdbc7.jar"),
     resolvers ++= Seq(
       "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
@@ -64,16 +77,32 @@ val core = (project in file("dq-core"))
     assemblyExcludedJars in assembly := (fullClasspath in assembly).value.filter(_.data.getName startsWith "spark-assembly"),
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = true),
     test in assembly := {},
+    mappings in Universal += {
+      val confFile = buildEnv.value match {
+        case BuildEnv.Dev => "path to application.conf"
+        case BuildEnv.Test => "path to application.conf"
+        case BuildEnv.Production => "path to application.conf"
+      }
+      ((resourceDirectory in Compile).value / confFile) -> "conf/application.conf"
+    },
+    mappings in Universal ++= {
+      val integrationFolder = integrationEnv.value match {
+        case IntegrationEnv.local => "path to integration directory"
+      }
+      directory((resourceDirectory in Compile).value / integrationFolder / "bin") ++
+        directory((resourceDirectory in Compile).value / integrationFolder / "conf")
+    },
     mappings in Universal <+= (assembly in Compile) map { jar =>
       jar -> ("lib/" + jar.getName)
     }
   )
 
-val ui = (project in file("dq-ui"))
+lazy val ui = (project in file("dq-ui"))
   .enablePlugins(PlayScala)
   .settings(
-    commonSettings,
-    scalaVersion := "2.11.7",
+    inThisBuild(
+      commonSettings ++ List(scalaVersion := "2.11.12")
+    ),
     incOptions := incOptions.value.withNameHashing(true),
     updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true),
     //we use nodejs to make our typescript build as fast as possible
@@ -90,7 +119,7 @@ val ui = (project in file("dq-ui"))
         "com.gilt" % "jerkson_2.11" % "0.6.9",
         "org.webjars" %% "webjars-play" % "2.5.0",
         "org.postgresql" % "postgresql" % "42.1.1",
-        //  "postgresql" % "postgresql" % "9.3-1102.jdbc41",
+        "org.typelevel" %% "cats-core" % "1.1.0",
 
         //angular2 dependencies
         "org.webjars.npm" % "angular__common" % ngVersion,
@@ -124,7 +153,8 @@ val ui = (project in file("dq-ui"))
         //test
         "org.webjars.npm" % "jasmine-core" % "2.6.4",
         "org.webjars.npm" % "ng2-file-upload" % "1.2.0",
-        "org.webjars.npm" % "file-saver" % "1.3.3"
+        "org.webjars.npm" % "file-saver" % "1.3.8",
+        "org.webjars.npm" % "types__file-saver" % "1.3.0"
       )
     },
     dependencyOverrides += "org.webjars.npm" % "minimatch" % "3.0.0",
@@ -147,7 +177,4 @@ val ui = (project in file("dq-ui"))
     logLevel in jasmine := Level.Info,
     logLevel in tslint := Level.Info,
     logLevel in typescript := Level.Info
-  )
-
-val root = (project in file("."))
-  .aggregate(core, ui)
+  ).dependsOn(common)
