@@ -1,13 +1,13 @@
-import com.typesafe.sbt.packager.MappingsHelper.directory
 import sbt.GlobFilter
 import sbt.Keys.{logLevel, scalaVersion, test, updateOptions}
-import sbtassembly.AssemblyPlugin.autoImport.assemblyOption
-import src.main.scala.BuildEnvPlugin.autoImport.{BuildEnv, buildEnv}
-import src.main.scala.BuildIntegrationPlugin.autoImport.{IntegrationEnv, integrationEnv}
+import sbtassembly.AssemblyPlugin.autoImport.{assemblyExcludedJars, assemblyOption}
+import NativePackagerHelper._
 
 name := "DataQuality-framework"
 
-lazy val commonSettings = Seq(version := "0.2.1")
+lazy val commonSettings = Seq(
+  version := "1.1.0"
+)
 
 scalacOptions ++= Seq(
   "-target:jvm-1.8",
@@ -15,10 +15,10 @@ scalacOptions ++= Seq(
   "-feature",
   "-language:implicitConversions",
   "-language:postfixOps",
-  "-language:reflectiveCalls",
-  "-Xmax-classfile-name", "225"
-//  "-Ypartial-unification"
+  "-language:reflectiveCalls"
 )
+
+scalacOptions ++= Seq("-Xmax-classfile-name", "225")
 
 resolvers ++= Seq(
   Resolver.bintrayRepo("webjars","maven"),
@@ -42,15 +42,13 @@ lazy val common = (project in file("dq-common"))
 lazy val core = (project in file("dq-core"))
   .enablePlugins(UniversalPlugin, UniversalDeployPlugin)
   .settings(
-//    inThisBuild(
-//      commonSettings ++ List(scalaVersion := "2.10.6")
-//    ),
     scalaVersion := "2.10.6",
     commonSettings,
     libraryDependencies ++= Seq(
-      "org.apache.spark" %% "spark-core" % "1.6.0",
-      "org.apache.spark" %% "spark-sql" % "1.6.0",
-      "org.apache.spark" %% "spark-hive" % "1.6.0",
+      "org.apache.spark" %% "spark-core" % "1.6.0", //place % "provided" before deployment
+      "org.apache.spark" %% "spark-sql" % "1.6.0", //place % "provided" before deployment
+      "org.apache.spark" %% "spark-hive" % "1.6.0", //place % "provided" before deployment
+      
       "com.databricks" %% "spark-avro" % "2.0.1",
       "com.databricks" %% "spark-csv" % "1.5.0",
       "org.apache.commons" % "commons-lang3" % "3.0",
@@ -77,19 +75,38 @@ lazy val core = (project in file("dq-core"))
     assemblyExcludedJars in assembly := (fullClasspath in assembly).value.filter(_.data.getName startsWith "spark-assembly"),
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = true),
     test in assembly := {},
+    assemblyMergeStrategy in assembly := {
+      case PathList("javax", "servlet", xs @ _*) => MergeStrategy.last
+      case PathList("javax", "activation", xs @ _*) => MergeStrategy.last
+      case PathList("org", "apache", xs @ _*) => MergeStrategy.last
+      case PathList("com", "google", xs @ _*) => MergeStrategy.last
+      case PathList("com", "esotericsoftware", xs @ _*) => MergeStrategy.last
+      case PathList("com", "codahale", xs @ _*) => MergeStrategy.last
+      case PathList("com", "yammer", xs @ _*) => MergeStrategy.last
+      case "about.html" => MergeStrategy.rename
+      case "META-INF/ECLIPSEF.RSA" => MergeStrategy.last
+      case "META-INF/mailcap" => MergeStrategy.last
+      case "META-INF/mimetypes.default" => MergeStrategy.last
+      case "plugin.properties" => MergeStrategy.last
+      case "log4j.properties" => MergeStrategy.last
+      case x =>
+        val oldStrategy = (assemblyMergeStrategy in assembly).value
+        oldStrategy(x)
+    },
     mappings in Universal += {
       // TODO: Add paths application configuration files
       val confFile = buildEnv.value match {
-        case BuildEnv.Dev => "path to application.conf"
-        case BuildEnv.Test => "path to application.conf"
-        case BuildEnv.Production => "path to application.conf"
+        case BuildEnv.Stage => "conf/qa.conf"
+        case BuildEnv.Test => "conf/test.conf"
+        case BuildEnv.Production => "conf/prod.conf"
+        case BuildEnv.Dev => "conf/dev.conf"
       }
       ((resourceDirectory in Compile).value / confFile) -> "conf/application.conf"
     },
     mappings in Universal ++= {
       // TODO: Add paths application integration files
       val integrationFolder = integrationEnv.value match {
-        case IntegrationEnv.local => "path to integration directory"
+        case _ => "integration/dev"
       }
       directory((resourceDirectory in Compile).value / integrationFolder / "bin") ++
         directory((resourceDirectory in Compile).value / integrationFolder / "conf")
@@ -169,9 +186,9 @@ lazy val ui = (project in file("dq-ui"))
 
     // use the combined tslint and eslint rules plus ng2 lint rules
     (rulesDirectories in tslint) := Some(List(
-    tslintEslintRulesDir.value,
-    // codelyzer uses 'cssauron' which can't resolve 'through' see https://github.com/chrisdickinson/cssauron/pull/10
-    ng2LintRulesDir.value
+      tslintEslintRulesDir.value,
+      // codelyzer uses 'cssauron' which can't resolve 'through' see https://github.com/chrisdickinson/cssauron/pull/10
+      ng2LintRulesDir.value
     )),
 
     // the naming conventions of our test files

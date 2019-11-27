@@ -14,12 +14,14 @@ trait DQSparkContext {
   protected def withSparkConf(settings: DQSettings)(
       f: SparkConf => SparkContext): SparkContext = {
     val conf = new SparkConf()
-      .setAppName(settings.appName)
+      .setAppName(s"${settings.appName} Data Quality")
       .set("spark.serializer", serializerClassName)
       .set("spark.kryoserializer.buffer.max", "128")
       .set("spark.sql.parquet.compression.codec", "snappy")
+
+    if (!settings.s3Bucket.isEmpty) conf.set("spark.sql.warehouse.dir", settings.s3Bucket + "/data_quality_output/spark/warehouse")
     if (settings.local) conf.setMaster("local[*]")
-    if (settings.hbaseHost.nonEmpty) conf.set("spark.hbase.host", settings.hbaseHost)
+    if (settings.hbaseHost.isDefined) conf.set("spark.hbase.host", settings.hbaseHost.get)
     f(conf)
   }
 
@@ -28,7 +30,7 @@ trait DQSparkContext {
       new SparkContext(conf)
     }
 
-  protected def makeSqlContext(sc: SparkContext) = {
+  protected def makeSqlContext(sc: SparkContext): SQLContext = {
     new SQLContext(sc)
   }
 

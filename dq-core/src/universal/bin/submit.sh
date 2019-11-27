@@ -5,7 +5,7 @@
 . /etc/hbase/conf/hbase-env.sh
 
 ######################## END REMOVE THESE LINES ##################################
-source $SCRIPT_DIR/global-parameters.sh
+source $SCRIPT_DIR/global_parameters.sh
 
 cd "${SCRIPT_DIR}/../.."
 echo "-------------------------------------------------------"

@@ -1,4 +1,4 @@
-package it.agilelab.bigdata.DataQuality.utils
+package it.agilelab.bigdata.DataQuality.utils.mailing
 
 /**
   * Created by Egor Makhov on 13/10/2017.
@@ -12,7 +12,7 @@ object Mail {
   case object Rich extends MailType
   case object MultiPart extends MailType
 
-  def a(mail: Mail)(implicit mailer: Mailer) {
+  def a(mail: Mail)(implicit mailer: MailerConfiguration) {
     import org.apache.commons.mail._
 
     val format =

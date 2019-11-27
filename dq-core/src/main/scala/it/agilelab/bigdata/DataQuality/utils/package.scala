@@ -8,84 +8,89 @@ import com.typesafe.config.Config
 import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
 import it.agilelab.bigdata.DataQuality.metrics.{ColumnMetricResult, ComposedMetricResult, FileMetricResult}
 import it.agilelab.bigdata.DataQuality.targets.{HdfsTargetConfig, SystemTargetConfig}
+import it.agilelab.bigdata.DataQuality.utils.io.{HdfsReader, HdfsWriter}
+import it.agilelab.bigdata.DataQuality.utils.mailing.{Mail, MailerConfiguration}
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
+import org.apache.spark.rdd.RDD
+import org.apache.spark.sql.{Row, SQLContext}
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 import scala.collection.immutable.TreeMap
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
+import scala.reflect.internal.util.TableDef.Column
+import org.apache.spark.sql.functions.lit
+
 import scala.util.Try
 import scala.util.parsing.json.JSONObject
 
-/**
-  * Created by Egor Makhov on 04/05/2017.
-  */
 package object utils extends Logging {
 
   // Application parameters
-  val applicationDateFormat: String = "yyyy-MM-dd"
-  val doubleFractionFormat: Int = 13
-  val shortDateFormatter: DateTimeFormatter =
-    DateTimeFormat.forPattern("yyyyMMdd")
+  val applicationDateFormat: String         = "yyyy-MM-dd"
+  val doubleFractionFormat: Int             = 13
+  val shortDateFormatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd")
 
   def parseTargetConfig(config: Config): Option[HdfsTargetConfig] = {
     Try {
       val name: Option[String] = Try(config.getString("fileName")).toOption
-      val format = config.getString("fileFormat")
-      val path = config.getString("path")
+      val format               = config.getString("fileFormat")
+      val path                 = config.getString("path")
+
       val delimiter = Try(config.getString("delimiter")).toOption
-      val quoted: Boolean = Try(config.getBoolean("quoted")).getOrElse(false)
+      val quote     = Try(config.getString("quote")).toOption
+      val escape    = Try(config.getString("escape")).toOption
+
+      val quoteMode = Try(config.getString("quoteMode")).toOption
+
       HdfsTargetConfig(name.getOrElse(""),
                        format,
                        path,
-                       delimiter,
-                       quoted = quoted)
+                       delimiter = delimiter,
+                       quote = quote,
+                       escape = escape,
+                       quoteMode = quoteMode)
     }.toOption
   }
 
-  def saveErrors(header: Seq[String], content: (String, mutable.Seq[String]))(
-      implicit sparkContext: SparkContext,
-      settings: DQSettings): Unit = {
+  def saveErrors(header: Seq[String], content: (String, mutable.Seq[Seq[String]]))(implicit fs: FileSystem,
+                                                                                   sc: SparkContext,
+                                                                                   sqlC: SQLContext,
+                                                                                   settings: DQSettings): Unit = {
+    settings.errorFolderPath match {
+      case Some(path) =>
+        val baseHeader: StructType = StructType((1 to header.size).map(x => StructField(s"VALUE_$x", StringType)))
+        val baseRDD: RDD[Row]      = sqlC.sparkContext.parallelize(content._2.map(Row.fromSeq))
 
-    val hc = sparkContext.hadoopConfiguration
-    val fs = FileSystem.get(hc)
-    val dateString = settings.ref_date.toString(shortDateFormatter)
-    val basePath = settings.errorFolderPath.getOrElse("")
-    val finalPath = s"$basePath/$dateString/${content._1}.csv"
-    val separator: Char = ','
+        val ordSeq = Seq("METRIC_ID") ++ (1 to header.size).foldLeft(Seq.empty[String])((s, x) =>
+          s ++ Seq(s"COLUMN_$x", s"VALUE_$x"))
 
-    val headerString = "METRIC_ID" + header.zipWithIndex.foldLeft("") {
-      (base, n) =>
-        base + s"${separator}COLUMN_${n._2 + 1}${separator}VALUE_${n._2 + 1}"
-    }
+        val baseDF = sqlC.createDataFrame(baseRDD, baseHeader)
+        val finalDF = header.zipWithIndex
+          .foldLeft(baseDF.withColumn("METRIC_ID", lit(content._1)))((df, i) =>
+            df.withColumn(s"COLUMN_${i._2 + 1}", lit(i._1)))
+          .select(ordSeq.head, ordSeq.tail: _*)
 
-    val errorFile = fs.create(new Path(finalPath))
-    try {
-      errorFile write (headerString + "\n").getBytes("UTF-8")
-      val (metric, errors) = content
-      errors.foreach { erStr =>
-        val er = erStr.split(",")
-        val csvString: String = metric + er
-          .zip(header)
-          .foldLeft("")(
-            (base, n) => base + s"$separator${n._2}$separator${n._1}"
-          )
-        errorFile write (csvString + "\n").getBytes("UTF-8")
-      }
-    } catch {
-      case e: Exception =>
-        log.warn(s"Some error occurred while writing $finalPath")
-        log.warn(e.toString)
-    } finally {
-      errorFile.close()
+        val tarConf = HdfsTargetConfig(
+          fileName = content._1,
+          fileFormat = settings.errorFileFormat,
+          path = path,
+          delimiter = settings.errorFileDelimiter,
+          escape = settings.errorFileEscape,
+          quote = settings.errorFileQuote,
+          quoteMode = settings.errorFileQuoteMode)
+
+        HdfsWriter.saveDF(tarConf, finalDF)
+
+      case _ => log.warn("Error dump path is not defined")
     }
   }
 
   def sendMail(recievers: Seq[String], text: Option[String], filepath: String)(
-      implicit mailer: Mailer): Unit = {
+      implicit mailer: MailerConfiguration): Unit = {
 
-    val defaultText =
-      "Some of requested checks failed. Please, check attached csv."
+    val defaultText = "Some of requested checks failed. Please, check attached csv."
 
     Mail a Mail(
       from = (mailer.address, "AgileLAB DataQuality"),
@@ -97,25 +102,24 @@ package object utils extends Logging {
 
   }
 
-  def sendBashMail(
-      numOfFailedChecks: Int,
-      failedCheckIds: String,
-      fullPath: String,
-      systemConfig: SystemTargetConfig)(implicit settings: DQSettings): Unit = {
+  def sendBashMail(numOfFailedChecks: Int, failedCheckIds: String, fullPath: String, systemConfig: SystemTargetConfig)(
+      implicit settings: DQSettings): Unit = {
     import sys.process.stringSeqToProcess
     val mailList: Seq[String] = systemConfig.mailList
-    val mailListString = mailList.mkString(" ")
-    val targetName = systemConfig.id
+    val mailListString        = mailList.mkString(" ")
+    val targetName            = systemConfig.id
 
-    Seq(
-      "/bin/bash",
-      settings.appDir + "/sendMail.sh",
-      targetName,
-      mailListString,
-      numOfFailedChecks.toString,
-      failedCheckIds,
-      fullPath
-    ) !!
+    if (settings.scriptPath.isDefined) {
+      Seq(
+        "/bin/bash",
+        settings.scriptPath.get,
+        targetName,
+        mailListString,
+        numOfFailedChecks.toString,
+        failedCheckIds,
+        fullPath
+      ) !!
+    } else throw new IllegalArgumentException("Mail script path is not defined")
 
   }
 
@@ -128,9 +132,7 @@ package object utils extends Logging {
     * @param aggr Generated id aggregator
     *
     * @return List of generated ids*/
-  def generateMetricSubId(id: String,
-                          n: Int,
-                          aggr: List[String] = List.empty): List[String] = {
+  def generateMetricSubId(id: String, n: Int, aggr: List[String] = List.empty): List[String] = {
     if (n >= 1) {
       val newId: List[String] = List(id + "_" + n.toString)
       return generateMetricSubId(id, n - 1, aggr ++ newId)
@@ -150,7 +152,7 @@ package object utils extends Logging {
     if (paramMap.nonEmpty) {
       // sorted by key to return the same result without affect of the map key order
       val sorted = TreeMap(paramMap.toArray: _*)
-      val tail = sorted.values.toList.mkString(":", ":", "")
+      val tail   = sorted.values.toList.mkString(":", ":", "")
       return tail
     }
     ""
@@ -311,7 +313,7 @@ package object utils extends Logging {
     val sep: String = "."
     schema match {
       case Some(x) => x + sep + table
-      case None => table
+      case None    => table
     }
   }
 
