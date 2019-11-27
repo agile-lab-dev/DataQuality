@@ -13,6 +13,7 @@ object DQResultTypes extends Enumeration {
   val composed: DQResultType = Value("Composed")
   val file: DQResultType = Value("File")
   val check: DQResultType = Value("Check")
+  val load: DQResultType = Value("Load")
 }
 
 trait TypedResult {

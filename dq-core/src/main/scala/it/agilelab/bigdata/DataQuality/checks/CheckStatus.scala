@@ -5,6 +5,12 @@ package it.agilelab.bigdata.DataQuality.checks
   *
   * Representation of check statuses
   */
+
+object CheckStatusEnum extends Enumeration {
+  type CheckResultStatus = Value
+  val Success, Failure, Error = Value
+}
+
 sealed trait CheckStatus {
   val stringValue: String
 }

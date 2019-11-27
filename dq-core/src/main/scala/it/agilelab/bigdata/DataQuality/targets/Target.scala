@@ -1,32 +1,51 @@
 package it.agilelab.bigdata.DataQuality.targets
+import it.agilelab.bigdata.DataQuality.utils.enums
+import it.agilelab.bigdata.DataQuality.utils.enums.Targets
+import it.agilelab.bigdata.DataQuality.utils.enums.Targets.TargetType
 
 /**
-  * Created by Gianvito Siciliano on 02/01/17.
+  * Base target trait
   */
 trait TargetConfig {
-  def getType: String
+  def getType: TargetType
 }
 
+/**
+  * System target configuration. Send an email and save a file if some of the checks are failing
+  * @param id Target id
+  * @param checkList List of check to watch
+  * @param mailList List of notification recipients
+  * @param outputConfig Output file configuration
+  */
 case class SystemTargetConfig(
     id: String,
     checkList: Seq[String],
     mailList: Seq[String],
     outputConfig: TargetConfig
 ) extends TargetConfig {
-  override def getType: String = "SYSTEM"
+  override def getType: enums.Targets.Value = Targets.system
 }
 
 /**
-  * Representation of file to save
+  * HDFS file target configuration
+  * @param fileName Name of the output file
+  * @param fileFormat File type (csv, avro)
+  * @param path desired path
+  * @param delimiter delimiter
+  * @param quote quote char
+  * @param escape escape char
+  * @param date output date
+  * @param quoteMode quote mode (refer to spark-csv)
   */
 case class HdfsTargetConfig(
     fileName: String,
     fileFormat: String,
     path: String,
     delimiter: Option[String] = None,
+    quote: Option[String] = None,
+    escape: Option[String] = None,
     date: Option[String] = None,
-    savemode: Option[String] = None,
-    quoted: Boolean = false
+    quoteMode: Option[String] = None
 ) extends TargetConfig {
-  override def getType: String = "HDFS"
+  override def getType: enums.Targets.Value = Targets.hdfs
 }

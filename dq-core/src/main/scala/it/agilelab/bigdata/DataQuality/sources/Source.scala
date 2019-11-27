@@ -5,10 +5,11 @@ import it.agilelab.bigdata.DataQuality.metrics.CalculatorStatus.Value
 import it.agilelab.bigdata.DataQuality.sources.SourceTypes.SourceType
 import it.agilelab.bigdata.DataQuality.targets.HdfsTargetConfig
 import it.agilelab.bigdata.DataQuality.utils.DQSettings
-import org.apache.spark.sql.DataFrame
-import scala.reflect._
 
-import scala.reflect.ClassTag
+import org.apache.spark.sql.DataFrame
+import org.apache.spark.storage.StorageLevel
+
+import scala.reflect._
 
 /**
   * Created by Gianvito Siciliano on 03/01/17.
@@ -55,14 +56,16 @@ case class VirtualFileSelect(id: String,
                              parentSourceIds: Seq[String],
                              sqlQuery: String,
                              keyfields: Seq[String],
-                             save: Boolean = false)
+                             save: Boolean = false,
+                             persist: Option[StorageLevel])
     extends VirtualFile(id, keyfields, save)
 
 case class VirtualFileJoinSql(id: String,
                               parentSourceIds: Seq[String],
                               sqlJoin: String,
                               keyfields: Seq[String],
-                              save: Boolean = false)
+                              save: Boolean = false,
+                              persist: Option[StorageLevel])
     extends VirtualFile(id, keyfields, save)
 
 case class VirtualFileJoin(id: String,
@@ -77,10 +80,11 @@ case class HdfsFile(
     id: String,
     path: String,
     fileType: String,
-    separator: Option[String],
     header: Boolean,
     date: String,
-    dependencies: List[String] = List.empty[String],
+    delimiter: Option[String] = None,
+    quote: Option[String] = None,
+    escape: Option[String] = None,
     schema: Option[Any] = None,
     keyfields: Seq[String] = Seq.empty
 ) extends SourceConfig {
@@ -90,12 +94,13 @@ case class HdfsFile(
       tar.fileName,
       tar.path + "/" + tar.fileName + s".${tar.fileFormat}",
       tar.fileFormat,
-      tar.delimiter,
       true,
-      tar.date.getOrElse(settings.refDateString)
-    )
+      tar.date.getOrElse(settings.refDateString),
+      tar.delimiter,
+      tar.quote,
+      tar.escape
+      )
   }
-
   override def getType: SourceType = SourceTypes.hdfs
 }
 

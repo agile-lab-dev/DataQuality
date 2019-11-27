@@ -79,18 +79,20 @@ Will load Hive table as source with selected query. You need to setup hive conne
 
 ### HDFS files
 ##### CSV file
-Classic comma separated values (separator is a variable). You also can provide a schema or parse it from the header
+Classic comma separated values. You also can provide a schema or parse it from the header
 ```hocon
 {
     id = "CONT"
     type = "HDFS"
     path = "/path/resources/sample-data/contract.csv",
     fileType = "csv",
-    separator = "|",
+    delimiter = "|", // optional
+    quote = "'", // optional
+    escape = "\\", // optional
     header = false,
     // Optional fields
     schema = [{name: "a", type: "string"}, {name: "b", type: "string"},{name: "c", type: "string"}]
-    date = "2017-05-19"
+    date = "2017-05-19" 
 }
 ```
 ##### Fixed format file

@@ -4,7 +4,7 @@ import it.agilelab.bigdata.DataQuality.checks._
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalConstraintResultException
 import it.agilelab.bigdata.DataQuality.metrics.MetricResult
 import it.agilelab.bigdata.DataQuality.utils.DQSettings
-import it.agilelab.bigdata.DataQuality.utils.io.LocalDBManager
+import it.agilelab.bigdata.DataQuality.utils.io.HistoryDBManager
 
 /**
   * Created by Egor Makhov on 19/05/2017.
@@ -35,8 +35,8 @@ case class AverageBoundFullCheck(id: String,
                                  threshold: Double,
                                  timewindow: Int,
                                  startDate: Option[String])(
-    implicit sqlWriter: LocalDBManager,
-    settings: DQSettings)
+                                  implicit sqlWriter: HistoryDBManager,
+                                  settings: DQSettings)
     extends TrendCheckCore(id,
                            description,
                            metrics,
@@ -103,8 +103,8 @@ case class AverageBoundLowerCheck(id: String,
                                   threshold: Double,
                                   timewindow: Int,
                                   startDate: Option[String])(
-    implicit sqlWriter: LocalDBManager,
-    settings: DQSettings)
+                                   implicit sqlWriter: HistoryDBManager,
+                                   settings: DQSettings)
     extends TrendCheckCore(id,
                            description,
                            metrics,
@@ -169,8 +169,8 @@ case class AverageBoundUpperCheck(id: String,
                                   threshold: Double,
                                   timewindow: Int,
                                   startDate: Option[String])(
-    implicit sqlWriter: LocalDBManager,
-    settings: DQSettings)
+                                   implicit sqlWriter: HistoryDBManager,
+                                   settings: DQSettings)
     extends TrendCheckCore(id,
                            description,
                            metrics,

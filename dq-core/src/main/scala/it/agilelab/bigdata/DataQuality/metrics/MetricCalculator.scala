@@ -19,8 +19,7 @@ object CalculatorStatus extends Enumeration {
 trait StatusableCalculator extends MetricCalculator {
   protected val status: CalculatorStatus
   protected val failCount: Int
-  protected def copyWithState(
-      failed: CalculatorStatus): MetricCalculator with StatusableCalculator
+  protected def copyWithState(failed: CalculatorStatus): MetricCalculator with StatusableCalculator
 
   def getFailCounter: Int = failCount
 
@@ -31,6 +30,7 @@ trait StatusableCalculator extends MetricCalculator {
   * Basic metric calculator
   */
 trait MetricCalculator {
+
   /**
     * Merges two metric calculators together
     *
@@ -54,7 +54,7 @@ trait MetricCalculator {
     */
   def result(): Map[String, (Double, Option[String])]
 
-  def getStatus = CalculatorStatus.OK
+  def getStatus: CalculatorStatus = CalculatorStatus.OK
 
 }
 
@@ -62,8 +62,7 @@ trait MetricCalculator {
   * Takes all metric results and then calculating new ones with formulas
   * @param primitiveMetrics metric results to operate with
   */
-class ComposedMetricCalculator(primitiveMetrics: Iterable[MetricResult])
-  extends ExprParsers2 {
+class ComposedMetricCalculator(primitiveMetrics: Iterable[MetricResult]) extends ExprParsers2 {
 
   private lazy val metricsResultMap: Map[String, String] = getMetricResultMap
 
@@ -75,17 +74,11 @@ class ComposedMetricCalculator(primitiveMetrics: Iterable[MetricResult])
     */
   def run(ex: ComposedMetric)(implicit settings: DQSettings) = {
     val formulaWithParameters = ex.formula
-    val formulaWithValues = replaceMetricsInFormula(formulaWithParameters)
+    val formulaWithValues     = replaceMetricsInFormula(formulaWithParameters)
 
     val result = calculateFormula(formulaWithValues)
 
-    ComposedMetricResult(ex.id,
-      settings.refDateString,
-      ex.name,
-      "",
-      formulaWithParameters,
-      result,
-      "")
+    ComposedMetricResult(ex.id, settings.refDateString, ex.name, "", formulaWithParameters, result, "")
   }
 
   /**
@@ -135,7 +128,7 @@ sealed trait ExprParsers2 extends JavaTokenParsers {
   case class Mul(t1: Tree, t2: Tree) extends Tree
   case class Div(t1: Tree, t2: Tree) extends Tree
   case class Pow(t1: Tree, t2: Tree) extends Tree
-  case class Num(t: Double) extends Tree
+  case class Num(t: Double)          extends Tree
 
   def eval(t: Tree): Double = t match {
     case Add(t1, t2) => eval(t1) + eval(t2)

@@ -12,7 +12,7 @@ SPARK_PARALLELISM=200
 HADOOP_DIR=/etc/hadoop/conf
 
 ###### LOGGING PARAMETERS
-LOG_DIR="${SCRIPT_DIR}/../../logs"
+LOG_DIR="${SCRIPT_DIR}/../../../logs"
 JAR_NAME="${SCRIPT_DIR}/../lib/*.jar"
 LOG_CONFIG="${SCRIPT_DIR}/../conf/log4j.properties"
 

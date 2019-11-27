@@ -1,4 +1,4 @@
-# Data Quality Framework
+# Agile Lab Data Quality
 
 DQ is a framework to build parallel and distributed quality checks on big data environments.
 It can be used to calculate metrics and perform checks to assure quality on structured or unstructured data.

@@ -1,109 +1,95 @@
 package it.agilelab.bigdata.DataQuality.sources
 
 import it.agilelab.bigdata.DataQuality.utils._
+
+import org.apache.spark.storage.StorageLevel
+import org.apache.spark.sql.hive.HiveContext
 import org.apache.spark.sql.{DataFrame, SQLContext}
+import org.apache.spark.storage.StorageLevel
 
 import scala.collection.JavaConversions.asJavaCollection
 
 /**
   * Created by Rocco Caruso on 12/10/17.
   */
-
 object VirtualSourceProcessor {
 
-  def getActualSources(initialVirtualSourcesMap: Map[String, VirtualFile],
-                       initialSourceMap: Map[String, Source])(
-                        implicit sqlContext: SQLContext,
-                        settings: DQSettings): Map[String, Source] = {
+  def getActualSources(initialVirtualSourcesMap: Map[String, VirtualFile], initialSourceMap: Map[String, Source])(
+      implicit sqlContext: SQLContext,
+      settings: DQSettings): Map[String, Source] = {
 
     @scala.annotation.tailrec
-    def loop(virtualSourcesMap: Map[String, VirtualFile],
-             actualSourcesMapAccumulator: Map[String, Source])(
+    def loop(virtualSourcesMap: Map[String, VirtualFile], actualSourcesMapAccumulator: Map[String, Source])(
         implicit sqlContext: SQLContext): Map[String, Source] = {
 
-      log.info(
-        "VIRTUAL SOURCES MAP SIZE " + virtualSourcesMap.size + " keys " + virtualSourcesMap.keySet
-          .mkString("-"))
-      log.info(
-        "ACTUAL SOURCES MAP SIZE " + actualSourcesMapAccumulator.size + " keys " + actualSourcesMapAccumulator.keySet
-          .mkString("-"))
+      log.info(s"Virtual sources to load: ${virtualSourcesMap.size}")
+
       if (virtualSourcesMap.isEmpty) {
+        log.info(s"[SUCCESS] Virtual sources loading is complete.")
         actualSourcesMapAccumulator
       } else {
         val firstLevelVirtualSources: Map[String, VirtualFile] =
           virtualSourcesMap.filter {
             case (sourceId, conf: VirtualFile) =>
               val parentIds = conf.parentSourceIds
-              log.info(s"* virtual source $sourceId | parentIDS ${parentIds.mkString(
-                "-")} sources ${actualSourcesMapAccumulator.keySet.mkString("-")}")
+              log.info(s"  * Virtual source $sourceId | parents: ${parentIds.mkString(", ")}")
               actualSourcesMapAccumulator.keySet.containsAll(parentIds)
           }
 
         val otherSources: Map[String, Source] = firstLevelVirtualSources
           .map {
-            case (vid, virutalFile) =>
-              virutalFile match {
-                case VirtualFileSelect(id,
-                                       parentSourceIds,
-                                       sqlCode,
-                                       keyfields,
-                                       _) =>
-                  log.info("VIRTUAL SOURCE SELECT " + vid)
+            case (vid, virtualFile) =>
+              virtualFile match {
+                case VirtualFileSelect(id, parentSourceIds, sqlCode, keyfields, save, persist) =>
                   val firstParent = parentSourceIds.head
-                  log.info("FIRST PARENT " + firstParent)
-                  val dfSource =
-                    actualSourcesMapAccumulator.get(firstParent).head
+                  log.info(s"Processing '$id', type: 'FILTER-SQL', parent: '$firstParent'")
+                  log.info(s"SQL: $sqlCode")
+                  val dfSource = actualSourcesMapAccumulator.get(firstParent).head
 
                   dfSource.df.registerTempTable(firstParent)
                   val virtualSourceDF = sqlContext.sql(sqlCode)
 
-                  Source(vid,
-                         settings.refDateString,
-                         virtualSourceDF,
-                         keyfields)
-                case VirtualFileJoinSql(id,
-                                        parentSourceIds,
-                                        sqlCode,
-                                        keyfields,
-                                        _) =>
-                  log.info("VIRTUAL JOIN " + sqlCode)
-                  val leftParent = parentSourceIds.head
+                  //persist feature
+                  if (persist.isDefined) {
+                    virtualSourceDF.persist(persist.getOrElse(throw new RuntimeException("Something is wrong!")))
+                    log.info(s"Persisting VS $id (${persist.get.description})...")
+                  }
+
+                  Source(vid, settings.refDateString, virtualSourceDF, keyfields)
+
+                case VirtualFileJoinSql(id, parentSourceIds, sqlCode, keyfields, save, persist) =>
+                  val leftParent  = parentSourceIds.head
                   val rightParent = parentSourceIds(1)
-                  log.info("LEFT PARENT " + leftParent)
-                  log.info("RIGHT PARENT " + rightParent)
-                  val dfSourceLeft: DataFrame =
-                    actualSourcesMapAccumulator(leftParent).df
-                  val dfSourceRight: DataFrame =
-                    actualSourcesMapAccumulator(rightParent).df
-                  val colLeft = dfSourceLeft.columns.toSeq.mkString(",")
+                  log.info(s"Processing '$id', type: 'JOIN-SQL', parent: L:'$leftParent', R:'$rightParent'")
+                  log.info(s"SQL: $sqlCode")
+
+                  val dfSourceLeft: DataFrame = actualSourcesMapAccumulator(leftParent).df
+                  val dfSourceRight: DataFrame = actualSourcesMapAccumulator(rightParent).df
+                  val colLeft  = dfSourceLeft.columns.toSeq.mkString(",")
                   val colRight = dfSourceRight.columns.toSeq.mkString(",")
+
                   dfSourceLeft.registerTempTable(leftParent)
                   dfSourceRight.registerTempTable(rightParent)
-                  log.info(s"column left $colLeft")
-                  log.info(s"column right $colRight")
+
+                  log.debug(s"column left $colLeft")
+                  log.debug(s"column right $colRight")
                   val virtualSourceDF = sqlContext.sql(sqlCode)
-                  log.info("VIRTUAL JOIN" + virtualSourceDF.explain())
 
-                  Source(vid,
-                         settings.refDateString,
-                         virtualSourceDF,
-                         keyfields)
+                  //persist feature
+                  if (persist.isDefined) {
+                    virtualSourceDF.persist(persist.getOrElse(throw new RuntimeException("Something is wrong!")))
+                    log.info(s"Persisting VS $id (${persist.get.description})...")
+                  }
 
-                case VirtualFileJoin(id,
-                                     parentSourceIds,
-                                     joiningColumns,
-                                     joinType,
-                                     keyfields,
-                                     _) =>
-                  log.info("VIRTUAL JOIN " + joiningColumns.mkString("-"))
+                  Source(vid, settings.refDateString, virtualSourceDF, keyfields)
 
-                  val leftParent = parentSourceIds.head
+                case VirtualFileJoin(id, parentSourceIds, joiningColumns, joinType, keyfields, _) =>
+                  val leftParent  = parentSourceIds.head
                   val rightParent = parentSourceIds(1)
-                  log.info("LEFT PARENT " + leftParent)
-                  log.info("RIGHT PARENT " + rightParent)
+                  log.info(s"Processing '$id', type: 'JOIN', parent: L:'$leftParent', R:'$rightParent'")
+
                   val dfSourceLeft = actualSourcesMapAccumulator(leftParent).df
-                  val dfSourceRight =
-                    actualSourcesMapAccumulator(rightParent).df
+                  val dfSourceRight = actualSourcesMapAccumulator(rightParent).df
 
                   val colLeftRenamedLeft: Array[(String, String)] =
                     dfSourceLeft.columns
@@ -114,30 +100,24 @@ object VirtualSourceProcessor {
                       .filter(c => !joiningColumns.contains(c))
                       .map(colName => (colName, s"r_$colName"))
 
-                  val dfLeftRenamed = colLeftRenamedLeft.foldLeft(dfSourceLeft)(
-                    (dfAcc, cols) => dfAcc.withColumnRenamed(cols._1, cols._2))
-                  val dfRightRenamed =
-                    colLeftRenamedRight.foldLeft(dfSourceRight)((dfAcc, cols) =>
-                      dfAcc.withColumnRenamed(cols._1, cols._2))
+                  val dfLeftRenamed = colLeftRenamedLeft
+                    .foldLeft(dfSourceLeft)((dfAcc, cols) => dfAcc.withColumnRenamed(cols._1, cols._2))
+                  val dfRightRenamed = colLeftRenamedRight
+                    .foldLeft(dfSourceRight)((dfAcc, cols) => dfAcc.withColumnRenamed(cols._1, cols._2))
 
-                  val colLeft = dfLeftRenamed.columns.toSeq.mkString(",")
+                  val colLeft  = dfLeftRenamed.columns.toSeq.mkString(",")
                   val colRight = dfRightRenamed.columns.toSeq.mkString(",")
 
                   dfLeftRenamed.registerTempTable(leftParent)
                   dfRightRenamed.registerTempTable(rightParent)
 
-                  log.info(s"column left $colLeft")
-                  log.info(s"column right $colRight")
+                  log.debug(s"column left $colLeft")
+                  log.debug(s"column right $colRight")
 
                   val virtualSourceDF =
                     dfLeftRenamed.join(dfRightRenamed, joiningColumns, joinType)
 
-                  log.info("VIRTUAL JOIN" + virtualSourceDF.explain())
-
-                  Source(vid,
-                         settings.refDateString,
-                         virtualSourceDF,
-                         keyfields)
+                  Source(vid, settings.refDateString, virtualSourceDF, keyfields)
               }
 
           }
