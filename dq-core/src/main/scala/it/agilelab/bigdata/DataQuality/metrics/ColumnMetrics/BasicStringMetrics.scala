@@ -1,9 +1,12 @@
 package it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics
 
+import java.text.SimpleDateFormat
+
 import it.agilelab.bigdata.DataQuality.metrics.CalculatorStatus.CalculatorStatus
 import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
 import it.agilelab.bigdata.DataQuality.metrics.{CalculatorStatus, MetricCalculator, StatusableCalculator}
 import it.agilelab.bigdata.DataQuality.utils.{getParametrizedMetricTail, _}
+import org.joda.time.LocalDateTime
 import org.joda.time.format.DateTimeFormat
 
 import scala.util.Try
@@ -281,9 +284,11 @@ object BasicStringMetrics {
         paramMap)
 
     private def checkDate(value: Any, dateFormat: String) = {
-      val fmt = DateTimeFormat forPattern formatDate
       tryToString(value) match {
-        case Some(v) => Try(fmt parseDateTime v).isSuccess
+        case Some(v) =>
+          val joda = Try(LocalDateTime.parse(v, DateTimeFormat.forPattern(dateFormat))).isSuccess
+          val sdf = Try(new SimpleDateFormat(dateFormat).parse(v)).isSuccess
+          joda || sdf
         case _       => false
       }
 

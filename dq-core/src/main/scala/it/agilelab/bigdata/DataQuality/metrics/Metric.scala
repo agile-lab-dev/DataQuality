@@ -18,8 +18,11 @@ case class ColumnMetric(
     source: String,
     sourceDate: String,
     columns: Seq[String],
-    paramMap: Map[String, Any]
-) extends Metric
+    paramMap: Map[String, Any],
+    positions: Seq[Int] = Seq.empty
+) extends Metric {
+  if (positions.nonEmpty && positions.size != columns.size) throw new IllegalArgumentException("paramMap.size != columns.size")
+}
 
 case class FileMetric(
     id: String,
@@ -38,10 +41,9 @@ case class ComposedMetric(
     paramMap: Map[String, Any]
 ) extends Metric
 
-case class OutputMetric(
-    id: String,
-    name: String,
-    description: String,
-    outputMetric: String,
-    paramMap: Map[String, Any]
-) extends Metric
+case class ConfigMetric(
+                         id: String,
+                         name: String,
+                         description: String,
+                         paramMap: Map[String, Any]
+                       ) extends Metric

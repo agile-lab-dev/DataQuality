@@ -318,7 +318,7 @@ object BasicNumericMetrics {
     }
 
     override def increment(values: Seq[Any]): MetricCalculator = {
-      if (Try { values.head.asInstanceOf[Double] }.isSuccess)
+      if (Try { values.head.toString.toDouble }.isSuccess)
         NumberCastValuesMetricCalculator(cnt + 1)
       else this
     }

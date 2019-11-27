@@ -3,7 +3,7 @@ package it.agilelab.bigdata.DataQuality.checks.TrendChecks
 import it.agilelab.bigdata.DataQuality.checks._
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalParameterException
 import it.agilelab.bigdata.DataQuality.metrics.{ColumnMetricResult, ComposedMetricResult, FileMetricResult, MetricResult}
-import it.agilelab.bigdata.DataQuality.utils.io.LocalDBManager
+import it.agilelab.bigdata.DataQuality.utils.io.HistoryDBManager
 import it.agilelab.bigdata.DataQuality.utils._
 
 import scala.util.Try
@@ -31,8 +31,8 @@ abstract class TrendCheckCore(id: String,
                               threshold: Double,
                               timewindow: Int,
                               startDate: Option[String])(
-    implicit sqlWriter: LocalDBManager,
-    settings: DQSettings)
+                               implicit sqlWriter: HistoryDBManager,
+                               settings: DQSettings)
     extends Check with Logging {
 
   // Things to be implemented in the child classes

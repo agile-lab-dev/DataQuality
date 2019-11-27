@@ -11,7 +11,7 @@ import org.apache.avro.Schema
 import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.types._
-import org.apache.spark.sql.{DataFrame, Row, SQLContext}
+import org.apache.spark.sql.{DataFrame, DataFrameReader, Row, SQLContext}
 import org.joda.time.DateTime
 
 import scala.collection.JavaConversions._
@@ -33,15 +33,13 @@ object HdfsReader extends Logging {
     * @param settings dataquality configuration
     * @return sequency of dataframes
     */
-  def load(inputConf: HdfsFile, refDate: DateTime)(
-      implicit fs: FileSystem,
-      sqlContext: SQLContext,
-      settings: DQSettings): Seq[DataFrame] = {
+  def load(inputConf: HdfsFile,
+           refDate: DateTime)(implicit fs: FileSystem, sqlContext: SQLContext, settings: DQSettings): Seq[DataFrame] = {
 
-    log.warn(refDate)
     // replaces {{yyyyMMdd}} in the source path
     val finalPath = PathUtils.replaceDateInPath(inputConf.path, refDate)
 
+    log.info(s"Loading ${inputConf.fileType.toUpperCase} file -> ${inputConf.id}:$finalPath")
     inputConf.fileType.toUpperCase match {
       case "CSV"     => loadCsv(inputConf, finalPath)
       case "PARQUET" => loadParquet(inputConf, finalPath)
@@ -59,12 +57,9 @@ object HdfsReader extends Logging {
     * @param sqlContext sql context
     * @return sequence of dataframes
     */
-  def loadOutput(inputConf: OutputFile)(
-      implicit fs: FileSystem,
-      sqlContext: SQLContext): Seq[(String, DataFrame)] = {
+  @deprecated
+  def loadOutput(inputConf: OutputFile)(implicit fs: FileSystem, sqlContext: SQLContext): Seq[(String, DataFrame)] = {
     import sqlContext.implicits._
-
-    log.info(s"Starting load ${inputConf.fileType.toUpperCase}")
 
     if (!fs.exists(new Path(inputConf.path))) {
       log.warn("fixed input file: " + inputConf.path + " not found!")
@@ -72,7 +67,7 @@ object HdfsReader extends Logging {
     } else {
       log.warn("loading fixed input file: " + inputConf.id)
 
-      val fileMetrics = sqlContext.sparkContext.textFile(inputConf.path + "/")
+      val fileMetrics   = sqlContext.sparkContext.textFile(inputConf.path + "/")
       val columnMetrics = sqlContext.sparkContext.textFile(inputConf.path + "/")
 
       val columnData =
@@ -108,11 +103,9 @@ object HdfsReader extends Logging {
     * @param sqlContext sql context
     * @return sequence of dataframes
     */
-  private def loadWithSchema(inputConf: HdfsFile, filePath: String)(
-      implicit fs: FileSystem,
-      sqlContext: SQLContext): Seq[DataFrame] = {
-    log.info(
-      s"Starting load ${inputConf.fileType.toUpperCase} file -> ${filePath}")
+  private def loadWithSchema(inputConf: HdfsFile, filePath: String)(implicit fs: FileSystem,
+                                                                    sqlContext: SQLContext): Seq[DataFrame] = {
+    log.info(s"Starting load ${inputConf.fileType.toUpperCase} file -> ${filePath}")
 
     val result: Option[DataFrame] = if (!fs.exists(new Path(filePath))) {
       log.warn("fixed input file: " + filePath + " not found!")
@@ -122,8 +115,7 @@ object HdfsReader extends Logging {
 
       val fieldSeq: List[GenStructColumn] = inputConf.schema.get match {
         case xs: List[_] =>
-          xs.filter(
-              _ match { case _: GenStructColumn => true; case _ => false })
+          xs.filter(_ match { case _: GenStructColumn => true; case _ => false })
             .asInstanceOf[List[GenStructColumn]]
         case s: String => tryToLoadSchema(s)
         case e         => throw IllegalParameterException(e.toString)
@@ -132,8 +124,7 @@ object HdfsReader extends Logging {
       val ff: RDD[Row] = sqlContext.sparkContext.textFile(filePath).map { x =>
         getRow(x, fieldSeq)
       }
-      val schema = StructType(
-        fieldSeq.map(x => StructField(x.name, StringType, nullable = true)))
+      val schema = StructType(fieldSeq.map(x => StructField(x.name, StringType, nullable = true)))
 
       Option(sqlContext.createDataFrame(ff, schema))
     }
@@ -149,14 +140,13 @@ object HdfsReader extends Logging {
     */
   private def getRow(x: String, fields: List[GenStructColumn]) = {
     val columnArray = new Array[String](fields.size)
-    var pos = 0
+    var pos         = 0
     fields.head.getType match {
       case "StructFixedColumn" =>
         val ll: List[StructFixedColumn] =
           fields.map(_.asInstanceOf[StructFixedColumn])
         ll.zipWithIndex.foreach { field =>
-          columnArray(field._2) =
-            Try(x.substring(pos, pos + field._1.length).trim).getOrElse(null)
+          columnArray(field._2) = Try(x.substring(pos, pos + field._1.length).trim).getOrElse(null)
           pos += field._1.length
         }
       case _ => IllegalParameterException(fields.head.toString)
@@ -173,19 +163,12 @@ object HdfsReader extends Logging {
     * @param settings dataquality configuration
     * @return sequence of dataframes
     */
-  private def loadAvro(inputConf: HdfsFile, filePath: String)(
-      implicit fs: FileSystem,
-      sqlContext: SQLContext,
-      settings: DQSettings): Seq[DataFrame] = {
-    log.info(
-      s"Starting load ${inputConf.fileType.toUpperCase} file -> ${filePath}")
+  private def loadAvro(inputConf: HdfsFile, filePath: String)(implicit fs: FileSystem,
+                                                              sqlContext: SQLContext,
+                                                              settings: DQSettings): Seq[DataFrame] = {
 
     val result: Option[DataFrame] =
-      if (!fs.exists(new Path(filePath))) {
-        log.warn("avro input file: " + inputConf.id + " not found!")
-        None
-      } else {
-        log.warn("loading avro input file: " + inputConf.id)
+      if (!fs.exists(new Path(filePath))) { None } else {
 
         // It's possible to provide a scheme, so the following code splits the workflow
         val schema = Try {
@@ -200,24 +183,24 @@ object HdfsReader extends Logging {
           }
         }.toOption
 
-        val res = schema match {
-          case Some(sc) =>
-            sqlContext.read
-              .format("com.databricks.spark.avro")
-              .option("avroSchema", sc.toString)
-              .load(filePath)
-          case None =>
-            if (inputConf.schema.isDefined)
-              log.warn("Failed to load the schema from file")
-            sqlContext.read
-              .format("com.databricks.spark.avro")
-              .load(filePath)
-        }
+        Try {
+          val res: DataFrame = schema match {
+            case Some(sc) =>
+              sqlContext.read
+                .format("com.databricks.spark.avro")
+                .option("avroSchema", sc.toString)
+                .load(filePath)
+            case None =>
+              if (inputConf.schema.isDefined)
+                log.warn("Failed to load the schema from file")
+              sqlContext.read
+                .format("com.databricks.spark.avro")
+                .load(filePath)
+          }
 
-        if (settings.repartition)
-          Some(res.repartition(sqlContext.sparkContext.defaultParallelism))
-        else
-          Some(res)
+          if (settings.repartition) res.repartition(sqlContext.sparkContext.defaultParallelism)
+          else res
+        }.toOption
       }
     result.map(Seq(_)).getOrElse(Nil)
   }
@@ -230,11 +213,8 @@ object HdfsReader extends Logging {
     * @param sqlContext sql context
     * @return sequence of dataframes
     */
-  private def loadParquet(inputConf: HdfsFile, filePath: String)(
-      implicit fs: FileSystem,
-      sqlContext: SQLContext): Seq[DataFrame] = {
-    log.info(
-      s"Starting load ${inputConf.fileType.toUpperCase} file -> ${filePath}")
+  private def loadParquet(inputConf: HdfsFile, filePath: String)(implicit fs: FileSystem,
+                                                                 sqlContext: SQLContext): Seq[DataFrame] = {
 
     val result: Option[DataFrame] =
       if (!fs.exists(new Path(filePath))) {
@@ -259,12 +239,9 @@ object HdfsReader extends Logging {
     * @param settings dataquality configuration
     * @return sequence of dataframes
     */
-  private def loadCsv(inputConf: HdfsFile, filePath: String)(
-      implicit fs: FileSystem,
-      sqlContext: SQLContext,
-      settings: DQSettings): Seq[DataFrame] = {
-    log.info(
-      s"Starting load ${inputConf.fileType.toUpperCase} file -> ${filePath}")
+  private def loadCsv(inputConf: HdfsFile, filePath: String)(implicit fs: FileSystem,
+                                                             sqlContext: SQLContext,
+                                                             settings: DQSettings): Seq[DataFrame] = {
 
     val schema: Option[List[StructField]] = Try {
       inputConf.schema.get match {
@@ -285,23 +262,30 @@ object HdfsReader extends Logging {
       }
     }.toOption
 
-    log.info("schema " + schema)
+    log.info(s"File header: ${inputConf.header}")
+    log.info("Entered schema: " + schema)
+    if (inputConf.header && schema.isDefined)
+      throw new IllegalArgumentException(
+        "Source can't have schema and header at the same time. Please, check the configuration file...")
 
-    val resultReader = sqlContext.read
+    val resultReader: DataFrameReader = sqlContext.read
       .format("com.databricks.spark.csv")
       .option("header", inputConf.header.toString)
-      .option("delimiter", inputConf.separator.getOrElse(","))
+      .option("delimiter", inputConf.delimiter.getOrElse(","))
+      .option("quote", inputConf.quote.getOrElse("\""))
+      .option("escape", inputConf.escape.getOrElse("\\"))
 
-    val result = schema match {
-      case Some(sc) => resultReader.schema(StructType(sc)).load(filePath)
-      case None     => resultReader.load(filePath)
-    }
+    val result = Try {
+      val res: DataFrame = schema match {
+        case Some(sc) => resultReader.schema(StructType(sc)).load(filePath)
+        case None     => resultReader.load(filePath)
+      }
 
-//      log.info("result count "+result.count())
-    if (settings.repartition)
-      return Seq(result.repartition(sqlContext.sparkContext.defaultParallelism))
+      if (settings.repartition) res.repartition(sqlContext.sparkContext.defaultParallelism)
+      else res
+    }.toOption
 
-    Seq(result)
+    result.map(Seq(_)).getOrElse(Nil)
   }
 
   /**
@@ -315,8 +299,7 @@ object HdfsReader extends Logging {
 
     var result = value
 
-    while (result != null && result.startsWith(quote)) result =
-      result.substring(1)
+    while (result != null && result.startsWith(quote)) result = result.substring(1)
 
     while (result != null && result.endsWith(quote)) if (result == quote)
       result = ""
@@ -350,8 +333,7 @@ object HdfsReader extends Logging {
     * @param fs file system
     * @return list of column object
     */
-  private def tryToLoadSchema(filePath: String)(
-      implicit fs: FileSystem): List[GenStructColumn] = {
+  private def tryToLoadSchema(filePath: String)(implicit fs: FileSystem): List[GenStructColumn] = {
     if (!fs.exists(new Path(filePath))) {
       log.warn("Schema does not exists")
       throw IllegalParameterException(filePath)
@@ -360,7 +342,7 @@ object HdfsReader extends Logging {
         ConfigFactory.parseFile(new File(filePath)).resolve()
       }.getOrElse(Try {
         val inputStream = fs.open(new Path(filePath))
-        val reader = new InputStreamReader(inputStream)
+        val reader      = new InputStreamReader(inputStream)
 
         ConfigFactory.parseReader(reader)
       }.getOrElse(throw IllegalParameterException(filePath)))
@@ -368,8 +350,8 @@ object HdfsReader extends Logging {
       val structColumns: List[ConfigObject] =
         configObj.getObjectList("Schema").toList
       structColumns.map(col => {
-        val conf = col.toConfig
-        val name = conf.getString("name")
+        val conf     = col.toConfig
+        val name     = conf.getString("name")
         val typeConf = conf.getString("type")
         Try {
           conf.getInt("length")

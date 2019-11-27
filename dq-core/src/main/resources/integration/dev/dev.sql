@@ -1,5 +1,8 @@
-DROP TABLE IF EXISTS "results_metric_columnar";
-CREATE TABLE "results_metric_columnar" (
+DROP SCHEMA IF EXISTS dev;
+CREATE SCHEMA dev;
+
+DROP TABLE IF EXISTS dev.results_metric_columnar;
+CREATE TABLE dev.results_metric_columnar (
   "metric_id"	TEXT NOT NULL,
   "source_date"	TEXT NOT NULL,
   "name"	TEXT NOT NULL,
@@ -11,10 +14,8 @@ CREATE TABLE "results_metric_columnar" (
   UNIQUE(metric_id, source_date)
 );
 
-
-
-DROP TABLE IF EXISTS "results_metric_file";
-CREATE TABLE "results_metric_file" (
+DROP TABLE IF EXISTS dev.results_metric_file;
+CREATE TABLE dev.results_metric_file (
   "metric_id"	TEXT NOT NULL,
   "source_date"	TEXT NOT NULL,
   "name"	TEXT NOT NULL,
@@ -24,10 +25,8 @@ CREATE TABLE "results_metric_file" (
   UNIQUE(metric_id, source_date)
 );
 
-
-
-DROP TABLE IF EXISTS "results_metric_composed";
-CREATE TABLE "results_metric_composed" (
+DROP TABLE IF EXISTS dev."results_metric_composed";
+CREATE TABLE dev."results_metric_composed" (
   "metric_id"	TEXT NOT NULL,
   "source_date"	TEXT NOT NULL,
   "name"	TEXT NOT NULL,
@@ -38,10 +37,8 @@ CREATE TABLE "results_metric_composed" (
   UNIQUE(metric_id, source_date)
 );
 
-
-
-DROP TABLE IF EXISTS "results_check";
-CREATE TABLE "results_check" (
+DROP TABLE IF EXISTS dev."results_check";
+CREATE TABLE dev."results_check" (
   "check_id" TEXT NOT NULL,
   "check_name" TEXT NOT NULL,
   "description" TEXT,
@@ -57,18 +54,18 @@ CREATE TABLE "results_check" (
 
 
 
-CREATE OR REPLACE FUNCTION upsert_colmet()
+CREATE OR REPLACE FUNCTION dev_upsert_colmet()
   RETURNS trigger AS
-$upsert_colmet$
+$dev_upsert_colmet$
 declare
 existing record;
 begin
-  if (select EXISTS (SELECT 1 FROM results_metric_columnar WHERE
+  if (select EXISTS (SELECT 1 FROM dev.results_metric_columnar WHERE
     metric_id = NEW.metric_id AND
     source_date = NEW.source_date
   )) then
 
-  UPDATE results_metric_columnar SET
+  UPDATE dev.results_metric_columnar SET
     name = NEW.name,
     column_names = NEW.column_names,
     params = NEW.params,
@@ -82,26 +79,26 @@ begin
 
   return new;
 end
-$upsert_colmet$
+$dev_upsert_colmet$
 LANGUAGE plpgsql;
 
-create trigger column_metrics_insert
+create trigger dev_column_metrics_insert
 before insert
-  on results_metric_columnar
+  on dev.results_metric_columnar
 for each row
-  execute procedure upsert_colmet();
+  execute procedure dev_upsert_colmet();
 
 
 
-CREATE OR REPLACE FUNCTION upsert_filemet()
+CREATE OR REPLACE FUNCTION dev_upsert_filemet()
 RETURNS trigger AS
-$upsert_filemet$
+$dev_upsert_filemet$
 declare
 existing record;
 begin
-if (select EXISTS (SELECT 1 FROM results_metric_file WHERE metric_id = NEW.metric_id AND source_date = NEW.source_date)) then
+if (select EXISTS (SELECT 1 FROM dev.results_metric_file WHERE metric_id = NEW.metric_id AND source_date = NEW.source_date)) then
 
-UPDATE results_metric_file SET
+UPDATE dev.results_metric_file SET
   name = NEW.name,
   source_id = NEW.source_id,
   result = NEW.result,
@@ -113,20 +110,20 @@ end if;
 
 return new;
 end
-$upsert_filemet$
+$dev_upsert_filemet$
 LANGUAGE plpgsql;
 
-create trigger file_metrics_insert
+create trigger dev_file_metrics_insert
 before insert
-  on results_metric_file
+  on dev.results_metric_file
 for each row
-  execute procedure upsert_filemet();
+  execute procedure dev_upsert_filemet();
 
 
 
-CREATE OR REPLACE FUNCTION upsert_compmet()
+CREATE OR REPLACE FUNCTION dev_upsert_compmet()
 RETURNS trigger AS
-$upsert_compmet$
+$dev_upsert_compmet$
 declare
 existing record;
 begin
@@ -145,27 +142,27 @@ end if;
 
 return new;
 end
-$upsert_compmet$
+$dev_upsert_compmet$
 LANGUAGE plpgsql;
 
-create trigger composed_metrics_insert
+create trigger dev_composed_metrics_insert
 before insert
-  on results_metric_composed
+  on dev.results_metric_composed
 for each row
-  execute procedure upsert_compmet();
+  execute procedure dev_upsert_compmet();
 
 
 
-CREATE OR REPLACE FUNCTION upsert_check()
+CREATE OR REPLACE FUNCTION dev_upsert_check()
 RETURNS trigger AS
-$upsert_check$
+$dev_upsert_check$
 declare
 existing record;
 begin
-if (select EXISTS (SELECT 1 FROM results_check
+if (select EXISTS (SELECT 1 FROM dev.results_check
 WHERE check_id = NEW.check_id AND exec_date = NEW.exec_date AND check_name = NEW.check_name)) then
 
-UPDATE results_check SET
+UPDATE dev.results_check SET
   description = NEW.description,
   checked_file = NEW.checked_file,
   base_metric = NEW.base_metric,
@@ -182,11 +179,11 @@ end if;
 
 return new;
 end
-$upsert_check$
+$dev_upsert_check$
 LANGUAGE plpgsql;
 
-create trigger checks_insert
+create trigger dev_checks_insert
 before insert
-  on results_check
+  on dev.results_check
 for each row
-  execute procedure upsert_check();
+  execute procedure dev_upsert_check();

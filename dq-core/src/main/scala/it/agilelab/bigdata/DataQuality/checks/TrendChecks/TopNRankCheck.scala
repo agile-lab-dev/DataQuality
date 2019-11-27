@@ -3,7 +3,7 @@ package it.agilelab.bigdata.DataQuality.checks.TrendChecks
 import it.agilelab.bigdata.DataQuality.checks._
 import it.agilelab.bigdata.DataQuality.exceptions.IllegalConstraintResultException
 import it.agilelab.bigdata.DataQuality.metrics.{ColumnMetricResult, MetricResult}
-import it.agilelab.bigdata.DataQuality.utils.io.LocalDBManager
+import it.agilelab.bigdata.DataQuality.utils.io.HistoryDBManager
 import it.agilelab.bigdata.DataQuality.utils.{DQSettings, mapResToColumnMet}
 
 import scala.util.Try
@@ -18,8 +18,8 @@ case class TopNRankCheck(id: String,
                          threshold: Double,
                          timewindow: Int,
                          startDate: Option[String])(
-    implicit sqlWriter: LocalDBManager,
-    settings: DQSettings)
+                          implicit sqlWriter: HistoryDBManager,
+                          settings: DQSettings)
     extends Check {
 
   def calculateJaccardDistance(set1: Set[String], set2: Set[String]): Double = {

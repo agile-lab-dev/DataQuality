@@ -2,8 +2,8 @@ package it.agilelab.bigdata.DataQuality.utils
 
 import java.util.Locale
 
-import it.agilelab.bigdata.DataQuality.utils.io.LocalDBManager
-import org.apache.hadoop.fs.FileSystem
+import it.agilelab.bigdata.DataQuality.utils.io.HistoryDBManager
+import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.log4j.{Level, Logger}
 import org.apache.spark.SparkContext
 import org.apache.spark.sql.SQLContext
@@ -23,31 +23,36 @@ trait DQMainClass { this: DQSparkContext with Logging =>
     Logger.getLogger("org.apache.hadoop.hdfs.KeyProviderCache").setLevel(Level.OFF)
   }
 
-  private def makeFileSystem(sc: SparkContext) = {
+  private def makeFileSystem(settings: DQSettings, sc: SparkContext): FileSystem = {
     if (sc.isLocal) FileSystem.getLocal(sc.hadoopConfiguration)
-    else FileSystem.get(sc.hadoopConfiguration)
+    else{
+
+      if (!settings.s3Bucket.isEmpty) {
+        sc.hadoopConfiguration.set("fs.defaultFS", settings.s3Bucket)
+        sc.hadoopConfiguration.set("fs.AbstractFileSystem.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
+      }
+
+      FileSystem.get( sc.hadoopConfiguration)
+
+    }
   }
 
   protected def body()(implicit fs: FileSystem,
                        sparkContext: SparkContext,
                        sqlContext: SQLContext,
-                       sqlWriter: LocalDBManager,
+                       sqlWriter: HistoryDBManager,
                        settings: DQSettings): Boolean
 
   def preMessage(task: String): Unit = {
-    log.warn(
-      "************************************************************************")
-    log.warn(s"               STARTING EXECUTION OF TASK $task")
-    log.warn(
-      "************************************************************************")
+    log.warn("************************************************************************")
+    log.warn(s"               Starting execution of task $task")
+    log.warn("************************************************************************")
   }
 
   def postMessage(task: String): Unit = {
-    log.warn(
-      "************************************************************************")
-    log.warn(s"               FINISHED EXECUTION OF TASK $task")
-    log.warn(
-      "************************************************************************")
+    log.warn("************************************************************************")
+    log.warn(s"               Finishing execution of task $task")
+    log.warn("************************************************************************")
   }
 
   def main(args: Array[String]): Unit = {
@@ -59,44 +64,36 @@ trait DQMainClass { this: DQSparkContext with Logging =>
       case Some(commandLineOptions) =>
         // Load our own config values from the default location, application.conf
         val settings = new DQSettings(commandLineOptions)
-
-        log.info("Mailing mode: " + settings.mailingMode)
-        settings.mailingConfig match {
-          case Some(mconf) => log.info("With configuration: " + mconf.toString)
-          case None        =>
-        }
-
-        log.info(s"Creating SparkContext, SqlContext and FileSystem...")
         val sparkContext = makeSparkContext(settings)
-        val sqlContext: SQLContext = if (settings.hiveDir.nonEmpty) {
-          log.info(s"Hive context created with hive dir ${settings.hiveDir}")
+        val fs = makeFileSystem(settings, sparkContext)
+
+        settings.logThis()(log)
+
+        val sqlContext: SQLContext = if (settings.hiveDir.isDefined) {
           val hc =  new HiveContext(sparkContext)
-          hc.setConf("hive.metastore.warehouse.dir", settings.hiveDir)
+          hc.setConf("hive.metastore.warehouse.dir", settings.hiveDir.get)
           hc
-        } else {
-          makeSqlContext(sparkContext)
-        }
+        } else makeSqlContext(sparkContext)
 
-        val fs = makeFileSystem(sparkContext)
-        val localSqlWriter = new LocalDBManager(settings)
+        val historyDatabase = new HistoryDBManager(settings)
 
-        preMessage(s"{${settings.appName}}")
+        // Starting application body
+        preMessage(s"{Data Quality ${settings.appName}}")
         val startTime = System.currentTimeMillis()
-        body()(fs, sparkContext, sqlContext, localSqlWriter, settings)
-        postMessage(s"{${settings.appName}}")
+        body()(fs, sparkContext, sqlContext, historyDatabase, settings)
+        postMessage(s"{Data Quality ${settings.appName}}")
 
-        log.info(
-          s"Execution finished in [${(System.currentTimeMillis() - startTime) / 60000}] min(s)")
-        log.info("Closing application")
+        log.info(s"Execution finished in [${(System.currentTimeMillis() - startTime) / 60000}] min(s)")
+        log.info("Closing application...")
 
-        localSqlWriter.closeConnection()
+        historyDatabase.closeConnection()
         sparkContext.stop()
 
-        log.info("Spark context terminated. Exiting...")
+        log.info("Spark context were terminated. Exiting...")
 
       case None =>
-        log.error("WRONG PARAMS")
-        throw new Exception("WRONG PARAMS")
+        log.error("Wrong parameters provided")
+        throw new Exception("Wrong parameters provided")
 
     }
 
