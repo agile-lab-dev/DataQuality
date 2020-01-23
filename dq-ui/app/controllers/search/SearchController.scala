@@ -1,8 +1,8 @@
 package controllers.search
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
+import controllers.utils.MyDBSession
 import models.{BasicEntityType, EntityParentEnumeration}
 import org.squeryl.PrimitiveTypeMode._
 import org.squeryl.Query
@@ -12,7 +12,7 @@ import play.api.mvc.{Action, AnyContent, Controller}
 import scala.util.Try
 
 
-class SearchController @Inject()(val configuration: Configuration) extends Controller {
+class SearchController @Inject()(val configuration: Configuration,session: MyDBSession) extends Controller {
 
   private implicit val pageLength: Option[Int] = configuration.getInt("pagination.length")
 

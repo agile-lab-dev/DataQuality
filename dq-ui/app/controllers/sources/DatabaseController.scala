@@ -1,9 +1,9 @@
 package controllers.sources
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
 import controllers.ControllerUtils._
+import controllers.utils.MyDBSession
 import controllers.utils.ValidationConstraints._
 import models.sources.Database
 import org.squeryl.PrimitiveTypeMode._
@@ -20,7 +20,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 24/08/2017.
   */
-class DatabaseController @Inject()(val configuration: Configuration) extends Controller {
+class DatabaseController @Inject()(val configuration: Configuration,session: MyDBSession) extends Controller {
 
   private implicit val pageLength: Option[Int] = configuration.getInt("pagination.length")
 

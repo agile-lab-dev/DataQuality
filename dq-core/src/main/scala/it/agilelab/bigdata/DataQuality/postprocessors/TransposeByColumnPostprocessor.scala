@@ -14,15 +14,15 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 
 import scala.util.Try
 
-final class TransposeByColumnPostprocessor(config: Config)
-    extends BasicPostprocessor(config) {
+final class TransposeByColumnPostprocessor(config: Config, settings: DQSettings)
+    extends BasicPostprocessor(config, settings) {
 
   import scala.collection.JavaConverters._
 
   private val vs = config.getString("source")
   private val target: HdfsTargetConfig = {
     val conf = config.getConfig("saveTo")
-    utils.parseTargetConfig(conf).get
+    utils.parseTargetConfig(conf)(settings).get
   }
   private val numOfColumns
     : Option[Int] = Try(config.getInt("numberOfColumns")).toOption
@@ -53,46 +53,47 @@ final class TransposeByColumnPostprocessor(config: Config)
         val cols: Array[String] = colsToProcess
         val hlCols: Seq[String] =
           (0 until x).foldLeft(Seq.empty[String])((arr, i) =>
-            arr ++ Seq(s"KEY_${i + offset}", s"VALUE_${i + offset}"))
+            arr ++ Seq(settings.backComp.keyFormatter(i + offset),
+              settings.backComp.valueFormatter(i + offset)))
 
         val columnDF = cols.zipWithIndex.foldLeft(df) {
           case (curr, (col, i)) =>
             curr
-              .withColumn(s"KEY_${i + offset}", lit(col))
-              .withColumnRenamed(col, s"VALUE_${i + offset}")
+              .withColumn(settings.backComp.keyFormatter(i + offset), lit(col))
+              .withColumnRenamed(col, settings.backComp.valueFormatter(i + offset))
         }
         (cols.length until x)
           .foldLeft(columnDF) {
             case (curr, i) =>
               curr
-                .withColumn(s"KEY_${i + offset}", lit(""))
-                .withColumn(s"VALUE_${i + offset}", lit(""))
+                .withColumn(settings.backComp.keyFormatter(i + offset), lit(""))
+                .withColumn(settings.backComp.valueFormatter(i + offset), lit(""))
           }
           .select((hlCols ++ colsToRemain).map(col): _*)
       case Some(x) if x <= colsToProcess.length =>
         val cols = colsToProcess.slice(0, x)
         val hlCols: Seq[String] =
           cols.indices.foldLeft(Seq.empty[String])((arr, i) =>
-            arr ++ Seq(s"KEY_${i + offset}", s"VALUE_${i + offset}"))
+            arr ++ Seq(settings.backComp.keyFormatter(i + offset), settings.backComp.valueFormatter(i + offset)))
         cols.zipWithIndex
           .foldLeft(df) {
             case (curr, (col, i)) =>
               curr
-                .withColumn(s"KEY_${i + offset}", lit(col))
-                .withColumnRenamed(col, s"VALUE_${i + offset}")
+                .withColumn(settings.backComp.keyFormatter(i + offset), lit(col))
+                .withColumnRenamed(col, settings.backComp.valueFormatter(i + offset))
           }
           .select((hlCols ++ colsToRemain).map(col): _*)
       case None =>
         val cols = colsToProcess
         val hlCols: Seq[String] =
           cols.indices.foldLeft(Seq.empty[String])((arr, i) =>
-            arr ++ Seq(s"KEY_${i + offset}", s"VALUE_${i + offset}"))
+            arr ++ Seq(settings.backComp.keyFormatter(i + offset), settings.backComp.valueFormatter(i + offset)))
         cols.zipWithIndex
           .foldLeft(df) {
             case (curr, (col, i)) =>
               curr
-                .withColumn(s"KEY_${i + offset}", lit(col))
-                .withColumnRenamed(col, s"VALUE_${i + offset}")
+                .withColumn(settings.backComp.keyFormatter(i + offset), lit(col))
+                .withColumnRenamed(col, settings.backComp.valueFormatter(i + offset))
           }
           .select((hlCols ++ colsToRemain).map(col): _*)
     }

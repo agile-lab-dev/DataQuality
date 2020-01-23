@@ -25,15 +25,12 @@ trait DQMainClass { this: DQSparkContext with Logging =>
 
   private def makeFileSystem(settings: DQSettings, sc: SparkContext): FileSystem = {
     if (sc.isLocal) FileSystem.getLocal(sc.hadoopConfiguration)
-    else{
-
-      if (!settings.s3Bucket.isEmpty) {
-        sc.hadoopConfiguration.set("fs.defaultFS", settings.s3Bucket)
+    else {
+      if (settings.s3Bucket.isDefined) {
+        sc.hadoopConfiguration.set("fs.defaultFS", settings.s3Bucket.get)
         sc.hadoopConfiguration.set("fs.AbstractFileSystem.s3a.impl", "org.apache.hadoop.fs.s3a.S3AFileSystem")
       }
-
       FileSystem.get( sc.hadoopConfiguration)
-
     }
   }
 
@@ -78,10 +75,10 @@ trait DQMainClass { this: DQSparkContext with Logging =>
         val historyDatabase = new HistoryDBManager(settings)
 
         // Starting application body
-        preMessage(s"{Data Quality ${settings.appName}}")
+        preMessage(s"{${settings.appName}}")
         val startTime = System.currentTimeMillis()
         body()(fs, sparkContext, sqlContext, historyDatabase, settings)
-        postMessage(s"{Data Quality ${settings.appName}}")
+        postMessage(s"{${settings.appName}}")
 
         log.info(s"Execution finished in [${(System.currentTimeMillis() - startTime) / 60000}] min(s)")
         log.info("Closing application...")

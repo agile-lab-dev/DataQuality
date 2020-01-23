@@ -8,6 +8,7 @@ import it.agilelab.bigdata.DataQuality.sources.DatabaseConfig
 import it.agilelab.bigdata.DataQuality.targets.HdfsTargetConfig
 import it.agilelab.bigdata.DataQuality.utils
 import it.agilelab.bigdata.DataQuality.utils.mailing.MailerConfiguration
+import it.agilelab.bigdata.DataQuality.utils.versions.BackCompatibilityConfiguration
 import org.apache.log4j.Logger
 import org.joda.time
 import org.joda.time.DateTime
@@ -52,12 +53,14 @@ class DQSettings(conf: Config,
 
   /* application.conf parameters */
   val appName: String = Try(conf.getString("application_name")).toOption.getOrElse("Data_Quality")
+  val runConfVersion: String = Try(conf.getString("run_configuration_version")).toOption.getOrElse("0.9.0")
 
-  val s3Bucket: String = Try(conf.getString("s3_bucket")).toOption.getOrElse("")
-
+  // External sources
+  val s3Bucket: Option[String] = DQSettings.getConfigOption[String]("s3_bucket", conf)
   val hiveDir: Option[String] = DQSettings.getConfigOption[String]("hive_warehouse_path", conf)
   val hbaseHost: Option[String] = DQSettings.getConfigOption[String]("hbase_host", conf)
 
+  // Temp files parameters
   val localTmpPath: Option[String] = DQSettings.getConfigOption[String]("tmp_files_management.local_fs_path", conf)
   val hdfsTmpPath: Option[String] = DQSettings.getConfigOption[String]("tmp_files_management.hdfs_path", conf)
   val tmpFileDelimiter: Option[String] = DQSettings.getConfigOption[String]("tmp_files_management.delimiter", conf)
@@ -65,6 +68,7 @@ class DQSettings(conf: Config,
   // Error managements parameters
   val errorFolderPath: Option[String] = DQSettings.getConfigOption[String]("metric_error_management.dump_directory_path", conf)
   val errorDumpSize: Int =  DQSettings.getConfigOption[Int]("metric_error_management.dump_size", conf).getOrElse(1000)
+  val errorDumpEmptyFile: Boolean =  DQSettings.getConfigOption[Boolean]("metric_error_management.empty_file", conf).getOrElse(false)
 
   val errorFileFormat: String = DQSettings.getConfigOption[String]("metric_error_management.file_config.format", conf).getOrElse("csv")
   val errorFileDelimiter: Option[String] = DQSettings.getConfigOption[String]("metric_error_management.file_config.delimiter", conf)
@@ -98,13 +102,21 @@ class DQSettings(conf: Config,
     case x    => throw IllegalParameterException(x)
   }
 
+  // Internal values
+  val backComp: BackCompatibilityConfiguration = versions.BackCompatibilityConfiguration.getConfig(runConfVersion)
+  val stageNum: Int = 10
+
   def logThis()(implicit log: Logger): Unit = {
     log.info(s"[CONF] General application configuration:")
-    log.info(s"[CONF] - HBase host: ${this.hbaseHost}")
-    log.info(s"[CONF] - Hive warehouse path: ${this.hiveDir}")
+    log.info(s"[CONF] - Run configuration version: ${this.runConfVersion}")
+    log.info(s"[CONF] - External source parameters:")
+    log.info(s"[CONF]   - S3 Bucket: ${this.s3Bucket}")
+    log.info(s"[CONF]   - HBase host: ${this.hbaseHost}")
+    log.info(s"[CONF]   - Hive warehouse path: ${this.hiveDir}")
     log.info(s"[CONF] - Metric error management configuration:")
     log.info(s"[CONF]   - Dump directory path path: ${this.errorFolderPath}")
     log.info(s"[CONF]   - Dump size: ${this.errorDumpSize}")
+    log.info(s"[CONF]   - Empty file: ${this.errorDumpEmptyFile}")
     log.info(s"[CONF] - Temporary files management configuration:")
     log.info(s"[CONF]   - Local FS path: ${this.localTmpPath}")
     log.info(s"[CONF]   - HDFS path: ${this.hdfsTmpPath}")

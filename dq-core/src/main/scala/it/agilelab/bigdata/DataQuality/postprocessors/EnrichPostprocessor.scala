@@ -18,8 +18,8 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 import scala.collection.JavaConversions._
 import scala.util.Try
 
-final class EnrichPostprocessor(config: Config)
-    extends BasicPostprocessor(config) {
+final class EnrichPostprocessor(config: Config, settings: DQSettings)
+    extends BasicPostprocessor(config, settings) {
 
   private val vs: Option[String] = Try(config.getString("source")).toOption
   private val metrics: util.List[String] = config.getStringList("metrics")
@@ -28,7 +28,7 @@ final class EnrichPostprocessor(config: Config)
 
   private val target: HdfsTargetConfig = {
     val conf = config.getConfig("saveTo")
-    utils.parseTargetConfig(conf).get
+    utils.parseTargetConfig(conf)(settings).get
   }
 
   override def process(vsRef: Set[HdfsFile],

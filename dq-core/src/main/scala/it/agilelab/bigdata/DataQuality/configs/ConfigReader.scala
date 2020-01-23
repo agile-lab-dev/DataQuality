@@ -26,14 +26,14 @@ import scala.collection.immutable.Seq
 import scala.collection.mutable
 import scala.util.Try
 
-class ConfigReader(configNameFile: String)(implicit sqlWriter: HistoryDBManager, settings: DQSettings) extends Logging {
+class ConfigReader(configPath: String)(implicit sqlWriter: HistoryDBManager, settings: DQSettings) extends Logging {
 
   /**
     * Parsed config OBJECTS
     *
     */
   //load conf file
-  val configObj: Config = ConfigFactory.parseFile(new File(configNameFile)).resolve()
+  private val configObj: Config = ConfigFactory.parseFile(new File(configPath)).resolve()
 
   val dbConfigMap: Map[String, DatabaseConfig] = getDatabasesById
 
@@ -100,7 +100,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: HistoryDBManager,
 
           val header = Try(generalConfig.getBoolean("header")).getOrElse(false)
 
-          val delimiter = Try(generalConfig.getString("delimiter")).toOption
+          val delimiter = settings.backComp.delimiterExtractor(generalConfig)
           val quote     = Try(generalConfig.getString("quote")).toOption
           val escape    = Try(generalConfig.getString("escape")).toOption
 
@@ -548,11 +548,11 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: HistoryDBManager,
           val fileFormat = inConfig.getString("fileFormat")
           val path       = inConfig.getString("path")
 
-          val delimiter = Try(inConfig.getString("delimiter")).toOption
-          val quote     = Try(inConfig.getString("quote")).toOption
-          val escape    = Try(inConfig.getString("escape")).toOption
+          val delimiter: Option[String] = settings.backComp.delimiterExtractor(inConfig)
+          val quote: Option[String] = Try(inConfig.getString("quote")).toOption
+          val escape: Option[String] = Try(inConfig.getString("escape")).toOption
 
-          val quoteMode = Try(inConfig.getString("quoteMode")).toOption
+          val quoteMode: Option[String] = settings.backComp.quoteModeExtractor(inConfig)
 
           val date = Try(inConfig.getString("date")).toOption
 
@@ -768,7 +768,7 @@ class ConfigReader(configNameFile: String)(implicit sqlWriter: HistoryDBManager,
           val inner: Config = conf.getConfig("config")
 
           meta.service.getConstructors.head
-            .newInstance(inner)
+            .newInstance(inner, settings)
             .asInstanceOf[BasicPostprocessor]
         case None =>
           log.warn("Wrong mode name!")

@@ -75,6 +75,16 @@ All modules of DQ works independently.:
 - [DQ-CORE installation guide](docs/installation/core-setup.md)
 - [DQ-UI installation guide](docs/installation/ui-setup.md)
 
+
+## Building CORE module
+
+Data Quality core module can be built with 2 different versions of Spark (1.6.0, 2.2.0). By default if will select 1.6.0. In order to build with Spark 2 set Multiversion.sparkVersion as in following snippet:
+```
+- set Multiversion.sparkVersion := "2.2.0"
+- project core
+- assembly
+```
+
 ## Examples
 
 There are some examples [here](docs/examples/examples.md), but here is one to get you started:
