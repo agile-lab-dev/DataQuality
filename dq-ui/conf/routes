@@ -6,7 +6,9 @@
 GET     /                           controllers.Application.index
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+
+#GET /assets/*file           controllers.Assets.at(file)
+#GET /versionedAssets/*file  controllers.Assets.versioned(file)
 
 ## Meta
 GET     /meta/rule/trend            controllers.meta.MetaController.getTrendCheckRules()
@@ -113,3 +115,5 @@ GET     /postprocessor              controllers.postprocessors.PostprocessContro
 GET     /config                     controllers.config.ConfigController.downloadConfiguration
 POST    /config                     controllers.config.ConfigController.uploadConfiguration
 DELETE  /config                     controllers.config.ConfigController.resetConfiguration
+
+GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)

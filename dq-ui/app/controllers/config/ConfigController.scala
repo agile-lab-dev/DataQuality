@@ -1,11 +1,11 @@
 package controllers.config
 
 import javax.inject.Inject
-
 import com.typesafe.config.ConfigRenderOptions
 import models.AppDB
 import models.config.{ConfigReader, ConfigWriter}
 import org.squeryl.PrimitiveTypeMode.inTransaction
+import play.api.Logger
 import play.api.libs.Files.TemporaryFile
 import play.api.mvc.{Action, Controller, MultipartFormData}
 
@@ -34,11 +34,16 @@ class ConfigController @Inject()() extends Controller {
              ConfigReader.parseConfiguration(file.ref.file)
              Ok
            } catch {
-             case e: Exception => InternalServerError(e.toString)
+
+             case e:  Exception => {
+               Logger.error("ERROR reading config: " + e.getMessage)
+               InternalServerError(e.toString)
+
+             }
            }
           case _ => BadRequest("No application/octet-stream files were found!")
         }
-      }) getOrElse BadRequest("File missing");
+      })  getOrElse BadRequest("File missing");
   }
 
   def resetConfiguration() = Action {

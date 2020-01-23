@@ -1,9 +1,9 @@
 package controllers.metrics
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
 import controllers.ControllerUtils._
+import controllers.utils.MyDBSession
 import controllers.utils.ValidationConstraints._
 import models.meta.MetricMeta
 import models.metrics.Metric.MetricType
@@ -21,7 +21,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 28/08/2017.
   */
-class ColumnMetricController @Inject()() extends Controller {
+class ColumnMetricController @Inject()(session: MyDBSession) extends Controller {
 
   private def getMainForm(currId: Option[String] = None): Form[(Metric, ColumnMetric, Seq[MetricParameter])] = {
     def valFunc: (String) => Boolean = (t:String) => inTransaction(validateId(t, Metric.getIdList(), currId))

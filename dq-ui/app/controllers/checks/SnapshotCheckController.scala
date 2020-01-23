@@ -1,9 +1,9 @@
 package controllers.checks
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
 import controllers.ControllerUtils._
+import controllers.utils.MyDBSession
 import controllers.utils.ValidationConstraints._
 import models.checks.Check.CheckType
 import models.checks.{Check, CheckParameter, SnapshotCheck}
@@ -22,7 +22,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 28/08/2017.
   */
-class SnapshotCheckController @Inject()() extends Controller {
+class SnapshotCheckController @Inject()(session: MyDBSession) extends Controller {
 
   private def getMainForm(currId: Option[String] = None): Form[(Check, SnapshotCheck, List[CheckParameter])] = {
     def valFunc: (String) => Boolean = (t:String) => inTransaction(validateId(t, Check.getIdList(), currId))

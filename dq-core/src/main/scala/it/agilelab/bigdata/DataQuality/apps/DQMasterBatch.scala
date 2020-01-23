@@ -34,7 +34,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * Configuration file parsing
       */
-    log.info(s"[STAGE 1/...] Parsing configuration file...")
+    log.info(s"[STAGE 1/${settings.stageNum}] Parsing configuration file...")
     log.info("Path: " + settings.configFilePath)
     val configuration = new ConfigReader(settings.configFilePath)
 
@@ -54,7 +54,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * Database connection management
       */
-    log.info(s"[STAGE 2/...] Connecting to external databases...")
+    log.info(s"[STAGE 2/${settings.stageNum}] Connecting to external databases...")
     val dbConnections: Map[String, Connection] =
       configuration.dbConfigMap.flatMap({ db =>
         log.info("Trying to connect to " + db._1)
@@ -69,7 +69,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * Source loading
       */
-    log.info(s"[STAGE 3/...] Loading data...")
+    log.info(s"[STAGE 3/${settings.stageNum}] Loading data...")
     val (sources: Seq[Source], lcResults: Seq[LoadCheckResult]) = configuration.sourcesConfigMap
       .map {
         case (source, conf) =>
@@ -160,7 +160,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * Metrics calculation
       */
-    log.info(s"[STAGE 4/...] Calculating metrics...")
+    log.info(s"[STAGE 4/${settings.stageNum}] Calculating metrics...")
     val allMetrics: Seq[(String,
                          Map[Seq[String], Map[ColumnMetric, (Double, Option[String])]],
                          Map[FileMetric, (Double, Option[String])])] =
@@ -251,7 +251,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * CALCULATING COMPOSED METRICS
       */
-    log.info(s"[STAGE 5/...] Calculating composed metrics...")
+    log.info(s"[STAGE 5/${settings.stageNum}] Calculating composed metrics...")
     // todo: It's possible to calculate composed using $primitiveMetricResults as zero value to avoid extra merges
     val composedMetricResults: Seq[ComposedMetricResult] =
       configuration.composedMetrics
@@ -269,7 +269,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * DEFINE and PERFORM CHECKS
       */
-    log.info(s"[STAGE 6/...] Performing checks...")
+    log.info(s"[STAGE 6/${settings.stageNum}] Performing checks...")
     val buildChecks = configuration.metricsByCheckMap.map {
       case (check, metricList) =>
         val resList = metricList.flatMap { mId =>
@@ -299,7 +299,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     /**
       * PERFORM SQL CHECKS
       */
-    log.info(s"[STAGE 7/...] Performing SQL checks...")
+    log.info(s"[STAGE 7/${settings.stageNum}] Performing SQL checks...")
     val sqlCheckResults: List[CheckResult] =
       configuration.sqlChecksList.map(check => {
         log.info("Calculating " + check.id + " " + check.description)
@@ -311,7 +311,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
 
     val finalCheckResults: Seq[CheckResult] = checkResults ++ sqlCheckResults
 
-    log.info(s"[STAGE 8/...] Processing results...")
+    log.info(s"[STAGE 8/${settings.stageNum}] Processing results...")
     log.info(s"Saving results to the database...")
     log.info(s"With reference date: ${settings.refDateString}")
     sqlWriter.saveResultsToDB(colMetricResultsList, "results_metric_columnar")
@@ -320,11 +320,11 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     sqlWriter.saveResultsToDB(finalCheckResults, "results_check")
 
     val targetResultMap: Map[String, Seq[Product with Serializable with TypedResult]] = Map(
-      "FILE_METRICS"     -> fileMetricResultsList,
-      "COLUMN_METRICS"   -> colMetricResultsList,
-      "COMPOSED_METRICS" -> composedMetricResults,
-      "CHECKS"           -> finalCheckResults,
-      "LOAD_CHECKS"      -> lcResults
+      settings.backComp.fileMetricTargetType -> fileMetricResultsList,
+      settings.backComp.columnMetricTargetType -> colMetricResultsList,
+      settings.backComp.composedMetricTargetType -> composedMetricResults,
+      settings.backComp.checkTargetType -> finalCheckResults,
+      settings.backComp.loadCheckTargetType -> lcResults
     )
 
     log. info("Saving targets...")
@@ -336,7 +336,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
           tar._2.foreach(conf => HdfsWriter.save(conf.asInstanceOf[HdfsTargetConfig], targetResultMap(tar._1)))
     })
 
-    log.info(s"[STAGE 9/...] Postprocessing...")
+    log.info(s"[STAGE 9/${settings.stageNum}] Postprocessing...")
     val vsHdfs: Set[HdfsFile] = settings.vsDumpConfig match {
       case Some(conf) =>
         vsToSave.map(vs => {
@@ -349,7 +349,7 @@ object DQMasterBatch extends DQMainClass with DQSparkContext with Logging {
     configuration.getPostprocessors.foldLeft(vsHdfs)((files, pp) =>
       files.+(pp.process(files, allMetricResults, finalCheckResults)))
 
-    log.info(s"[STAGE 10/...] Saving summary files and mailing reports...")
+    log.info(s"[STAGE 10/${settings.stageNum}] Saving summary files and mailing reports...")
     val summary = new Summary(configuration, Some(checkResults), Some(lcResults))
     log.debug(summary.toMailString())
     NotificationManager.saveResultsLocally(summary, Some(checkResults), Some(lcResults))

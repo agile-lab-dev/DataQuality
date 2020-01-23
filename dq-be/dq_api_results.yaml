@@ -1,0 +1,939 @@
+swagger: '2.0'
+info:
+  description:  API
+  version: 1.0.0
+  title: Data Quality API
+  # put the contact info for your development or API team
+  contact:
+    email: you@your-company.com
+
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+
+# tags are used for organizing operations
+tags:
+- name: Sources
+  description: Operations to interact with data sources
+- name: Metrics
+  description: Operations to interact with metric results
+- name: Checks
+  description: Operations to interact with check results
+
+paths:
+  /sources:
+    get:
+      tags:
+      - Sources
+      summary: Retrieve all sources
+      description: List of sources
+      produces:
+      - application/json
+      parameters:
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: id
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC
+      responses:
+        200:
+          description: All sources available
+          schema:
+            $ref: '#/definitions/SourcesResultsResponse'
+        400:
+          description: bad input parameter
+  /sources/{sourceId}:
+    get:
+      tags:
+      - Sources
+      summary: Retrieve all sources
+      description: List of sources
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: sourceId
+        description: The id of the source
+        required: true
+        type: string
+      responses:
+        200:
+          description: the source requested
+          schema:
+            $ref: '#/definitions/SourceItem'
+        400:
+          description: bad input parameter
+  
+  
+  
+  /results/metrics/{metricId}:
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve the metric
+      description: Passing a metricId you receive the metric associated
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: metricId
+        description: The id of the metric
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+        description: The current page, with this the backend calculate the offset
+      - in: query
+        name: limit
+        type: integer
+        description: The numbers of items to return
+      - in: query
+        name: sortBy
+        type: string
+        description: the field to sort by
+        default: date
+      - in: query
+        name: orderBy
+        type: string
+        description: can be DESC or ASC
+        enum: [DESC, ASC]
+        default: DESC
+      responses:
+        200:
+          description: metric requested
+          schema:
+            $ref: '#/definitions/MetricsResultsResponse'
+        400:
+          description: bad input parameter
+  
+  /results/metrics/source/{sourceId}:
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve all metrics for a given source
+      description: Passing a source id you receive all the metrics associated
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: sourceId
+        description: The id of the source
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+        description: The current page, with this the backend calculate the offset
+      - in: query
+        name: limit
+        type: integer
+        description: The numbers of items to return
+      - in: query
+        name: sortBy
+        type: string
+        description: the field to sort by
+        default: date
+      - in: query
+        name: orderBy
+        type: string
+        description: can be DESC or ASC
+        enum: [DESC, ASC]
+        default: DESC
+      responses:
+        200:
+          description: metric requested
+          schema:
+              $ref: '#/definitions/MetricsResultsResponse'
+        400:
+          description: bad input parameter
+          
+          
+  /results/metrics/source/{sourceId}/startDate/{startDate}/endDate/{endDate}:  
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve all metrics in a time interval
+      description: |
+        List of metrics result in a range of date
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: sourceId
+        description: The id of the source
+        required: true
+        type: string
+      - in: path
+        name: startDate
+        description: pass a startDate as 2019-11-14T00:00 in iso8601
+        required: true
+        type: string
+      - in: path
+        name: endDate
+        description: pass a endDate as 2019-11-14T00:00 in iso8601
+        required: true
+        type: string
+      - in: query
+        name: offset
+        type: integer
+        description: The number of items to skip before starting to collect the result set
+      - in: query
+        name: limit
+        type: integer
+        description: The numbers of items to return
+      responses:
+        200:
+          description: metric requested
+          schema:
+              $ref: '#/definitions/MetricsResultsResponse'
+        400:
+          description: bad input parameter       
+          
+          
+  /results/metrics/startDate/{startDate}/endDate/{endDate}:  
+    get:
+      tags:
+      - Metrics
+      summary: Retrieve all metrics in a time interval
+      description: |
+        List of metrics result in a range of date
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: startDate
+        description: pass a startDate as 2019-11-14T00:00 in iso8601
+        required: true
+        type: string
+      - in: path
+        name: endDate
+        description: pass a endDate as 2019-11-14T00:00 in iso8601
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+        description: The current page, with this the backend calculate the offset
+      - in: query
+        name: limit
+        type: integer
+        description: The numbers of items to return
+      - in: query
+        name: sortBy
+        type: string
+        description: the field to sort by
+        default: date
+      - in: query
+        name: orderBy
+        type: string
+        description: can be DESC or ASC
+        enum: [DESC, ASC]
+        default: DESC
+      responses:
+        200:
+          description: metric requested
+          schema:
+              $ref: '#/definitions/MetricsResultsResponse'
+        400:
+          description: bad input parameter
+          
+          
+  /results/checks:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks
+        description: |
+          Receive all the checks associated
+        produces:
+        - application/json
+        parameters:
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC
+        responses:
+          200:
+            description: All checks
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+            
+            
+  /results/checks/startDate/{startDate}/endDate/{endDate}:  
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks in a time interval
+        description: |
+          List of checks result in a range of date
+        produces:
+        - application/json
+        parameters:
+        - in: path
+          name: startDate
+          description: pass a startDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: path
+          name: endDate
+          description: pass a endDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC  
+        responses:
+          200:
+            description: results matching criteria
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+            
+                            
+  /results/checks/{checkId}:
+    get:
+      tags:
+      - Checks
+      summary: Retrieve a check by id
+      description: |
+        Receive the check result associated
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: checkId
+        description: check id param
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+        description: The current page, with this the backend calculate the offset
+      - in: query
+        name: limit
+        type: integer
+        description: The numbers of items to return
+      - in: query
+        name: sortBy
+        type: string
+        description: the field to sort by
+        default: execDate
+      - in: query
+        name: orderBy
+        type: string
+        description: can be DESC or ASC
+        enum: [DESC, ASC]
+        default: DESC  
+      responses:
+        200:
+          description: the result check requested
+          schema:
+            $ref: '#/definitions/ChecksResultsResponse'
+        400:
+          description: bad input parameter
+          
+          
+                              
+  /results/checks/{checkId}/startDate/{startDate}/endDate/{endDate}:
+    get:
+      tags:
+      - Checks
+      summary: Retrieve a check by id in a time interval
+      description: |
+        Receive the check result associated
+      produces:
+      - application/json
+      parameters:
+      - in: path
+        name: checkId
+        description: check id param
+        required: true
+        type: string
+      - in: path
+        name: startDate
+        description: pass a startDate as 2019-11-14T00:00 in iso8601
+        required: true
+        type: string
+      - in: path
+        name: endDate
+        description: pass a endDate as 2019-11-14T00:00 in iso8601
+        required: true
+        type: string
+      - in: query
+        name: page
+        type: integer
+        description: The current page, with this the backend calculate the offset
+      - in: query
+        name: limit
+        type: integer
+        description: The numbers of items to return
+      - in: query
+        name: sortBy
+        type: string
+        description: the field to sort by
+        default: execDate
+      - in: query
+        name: orderBy
+        type: string
+        description: can be DESC or ASC
+        enum: [DESC, ASC]
+        default: DESC  
+      responses:
+        200:
+          description: the result check requested
+          schema:
+            $ref: '#/definitions/ChecksResultsResponse'
+        400:
+          description: bad input parameter
+          
+ 
+          
+          
+  /results/checks/status/{status}:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks by status [Success, Failure]
+        description: |
+          Receive all the checks for a status 
+        produces:
+        - application/json
+        parameters:
+        - in: path
+          name: status
+          type: string
+          required: true
+          enum: [Success, Failure]
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC
+        responses:
+          200:
+            description: All checks
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+            
+                      
+          
+  /results/checks/status/{status}/startDate/{startDate}/endDate/{endDate}:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks by status [Success, Failure]
+        description: |
+          Receive all the checks for a status 
+        produces:
+        - application/json
+        parameters:
+        - in: path
+          name: status
+          type: string
+          required: true
+          enum: [Success, Failure]
+        - in: path
+          name: startDate
+          description: pass a startDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: path
+          name: endDate
+          description: pass a endDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC
+        responses:
+          200:
+            description: All checks
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+            
+            
+  /results/checks/tag/{tagId}:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks by tag
+        description: |
+          Receive all the checks fo a given tag
+        produces:
+        - application/json
+        parameters:
+        - in: path
+          name: tagId
+          description: tag id param
+          required: true
+          type: string
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC
+        responses:
+          200:
+            description: All checks
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+            
+            
+  /results/checks/tag/{tagId}/startDate/{startDate}/endDate/{endDate}:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks by tag
+        description: |
+          Receive all the checks fo a given tag
+        produces:
+        - application/json
+        parameters:
+        - in: path
+          name: tagId
+          description: tag id param
+          required: true
+          type: string
+        - in: path
+          name: startDate
+          description: pass a startDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: path
+          name: endDate
+          description: pass a endDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC
+        responses:
+          200:
+            description: All checks
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+
+                      
+  /results/checks/source/{sourceId}:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks for a given source
+        description: |
+          Passing a source id you receive all the checks associated
+        produces:
+        - application/json
+        parameters:
+          - in: path
+            name: sourceId
+            description: source id param
+            required: true
+            type: string
+          - in: query
+            name: page
+            type: integer
+            description: The current page, with this the backend calculate the offset
+          - in: query
+            name: limit
+            type: integer
+            description: The numbers of items to return
+          - in: query
+            name: sortBy
+            type: string
+            description: the field to sort by
+            default: execDate
+          - in: query
+            name: orderBy
+            type: string
+            description: can be DESC or ASC
+            enum: [DESC, ASC]
+            default: DESC   
+        responses:
+          200:
+            description: results matching criteria
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter        
+
+
+  /results/checks/source/{sourceId}/status/{status}/startDate/{startDate}/endDate/{endDate}:
+    get:
+      tags:
+      - Checks
+      summary: Retrieve all checks for a given source
+      description: |
+        Passing a source id you receive all the checks associated
+      produces:
+      - application/json
+      parameters:
+        - in: path
+          name: sourceId
+          description: source id param
+          required: true
+          type: string
+        - in: path
+          name: status
+          type: string
+          required: true
+          enum: [Success, Failure]
+        - in: path  
+          name: startDate
+          description: pass a startDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: path
+          name: endDate
+          description: pass a endDate as 2019-11-14T00:00 in iso8601
+          required: true
+          type: string
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC   
+      responses:
+        200:
+          description: results matching criteria
+          schema:
+            $ref: '#/definitions/ChecksResultsResponse'
+        400:
+          description: bad input parameter        
+
+
+  /results/checks/source/{sourceId}/startDate/{startDate}/endDate/{endDate}:
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks for a given source
+        description: |
+          Passing a source id you receive all the checks associated
+        produces:
+        - application/json
+        parameters:
+          - in: path
+            name: sourceId
+            description: source id param
+            required: true
+            type: string
+          - in: path  
+            name: startDate
+            description: pass a startDate as 2019-11-14T00:00 in iso8601
+            required: true
+            type: string
+          - in: path
+            name: endDate
+            description: pass a endDate as 2019-11-14T00:00 in iso8601
+            required: true
+            type: string
+          - in: query
+            name: page
+            type: integer
+            description: The current page, with this the backend calculate the offset
+          - in: query
+            name: limit
+            type: integer
+            description: The numbers of items to return
+          - in: query
+            name: sortBy
+            type: string
+            description: the field to sort by
+            default: execDate
+          - in: query
+            name: orderBy
+            type: string
+            description: can be DESC or ASC
+            enum: [DESC, ASC]
+            default: DESC   
+        responses:
+          200:
+            description: results matching criteria
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter        
+
+
+  /results/checks/metric/{metricId}:  
+      get:
+        tags:
+        - Checks
+        summary: Retrieve all checks for a given metric
+        description: |
+          Passing a metric id you receive all the checks associated
+        produces:
+        - application/json
+        parameters:
+        - in: path
+          name: metricId
+          description: metric id param
+          required: true
+          type: string
+        - in: query
+          name: page
+          type: integer
+          description: The current page, with this the backend calculate the offset
+        - in: query
+          name: limit
+          type: integer
+          description: The numbers of items to return
+        - in: query
+          name: sortBy
+          type: string
+          description: the field to sort by
+          default: execDate
+        - in: query
+          name: orderBy
+          type: string
+          description: can be DESC or ASC
+          enum: [DESC, ASC]
+          default: DESC  
+        responses:
+          200:
+            description: results matching criteria
+            schema:
+              $ref: '#/definitions/ChecksResultsResponse'
+          400:
+            description: bad input parameter
+            
+  
+definitions:
+
+  ChecksResultsResponse:
+    properties:
+      totalItems:
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/CheckResultsItem'
+          
+  MetricsResultsResponse:
+    properties:
+      totalItems:
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/MetricResultsItem'
+          
+  SourcesResultsResponse:
+    properties:
+      totalItems:
+        type: integer
+      data:
+        type: array
+        items:
+          $ref: '#/definitions/SourceItem'
+                    
+  SourceItem:
+    properties:
+      id:
+        type: string
+        example: TEST_FILTER_CF
+      type:
+        type: string
+        example: hdfs_file
+      keyFields:
+        type: array
+        items:
+          type: string
+        
+  MetricResultsItem:
+    properties:
+      metricId:
+        type: string
+        example: codice_null
+      name:
+        type: string
+        example:  NULL_VALUES
+      sourceId:
+        type: string
+        example: TEST_FILTER_CF
+      result:
+        type: string
+        example: 0.0
+      metricType:
+        type: string
+        example: columnar
+      date:
+        type: string
+        example: "2019-11-18"
+
+        
+  CheckResultsItem:
+    properties:
+      checkId:
+        type: string
+        example: codice_null_check
+      checkName:
+        type: string
+        example: EQUAL_TO
+      description:
+        type: string
+        example: checks not null
+      checkedFile:
+        type: string
+        example: TEST_FILTER_CF
+      baseMetric:
+        type: string
+        example: codice_null
+      comparedMetric:
+        type: string
+        example: None
+      comparedThreshold:
+        type: string
+        example: 0.0
+      status:
+        type: string
+        enum: [Success, Failure]
+        example: Success
+      message:
+        type: string
+        example: "Check codice_null_check for metric NULL_VALUES on column TEST_FILTER_CF[Buffer(codice)] check if (MetricResult) 0.0 is EQUAL_TO 0.0 (compareMetric/threshold). Result: Success. CheckStatus: 0.0 = 0.0."
+      execDate:
+        type: string
+        example: 2019-11-12
+      
+        
+# Added by API Auto Mocking Plugin
+# host: dq.com
+# basePath: /dq/1.0.0
+schemes:
+ - https
+# Added by API Auto Mocking Plugin
+host: $HostName
+# basePath: /dataquality/v1
+# Added by API Auto Mocking Plugin
+basePath: /dataquality/v1

@@ -1,13 +1,14 @@
-import sbt.GlobFilter
-import sbt.Keys.{logLevel, scalaVersion, test, updateOptions}
+import sbt._
+import Multiversion.sparkVersion
+import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
+import sbt.Keys.{scalaVersion, test}
 import sbtassembly.AssemblyPlugin.autoImport.{assemblyExcludedJars, assemblyOption}
-import NativePackagerHelper._
-
-name := "DataQuality-framework"
 
 lazy val commonSettings = Seq(
-  version := "1.1.0"
+  version := "1.2.0"
 )
+
+sparkVersion := "2.4.0" // default spark version
 
 scalacOptions ++= Seq(
   "-target:jvm-1.8",
@@ -15,10 +16,9 @@ scalacOptions ++= Seq(
   "-feature",
   "-language:implicitConversions",
   "-language:postfixOps",
-  "-language:reflectiveCalls"
+  "-language:reflectiveCalls",
+  "-Xmax-classfile-name", "225"
 )
-
-scalacOptions ++= Seq("-Xmax-classfile-name", "225")
 
 resolvers ++= Seq(
   Resolver.bintrayRepo("webjars","maven"),
@@ -26,52 +26,49 @@ resolvers ++= Seq(
   Resolver.jcenterRepo,
   "Maven Repository" at "https://repo1.maven.org/maven2",
   "Apache Repositroy" at "https://repository.apache.org/content/repositories/releases",
-  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/"
+  "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
+  "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
+  "Isarn Project" at "https://dl.bintray.com/isarn/maven/"
 )
 
-//makeDeploymentSettings(Universal, packageBin in Universal, "zip")
+def calcVersionScala(sparkVersion: String): String = {
+  sparkVersion.head match {
+    case '1' => "2.10.6"
+    case '2' => "2.11.11"
+    case _ => throw new Exception("This Spark version is not supported")
+  }
+}
 
-lazy val common = (project in file("dq-common"))
-  .settings(
-    libraryDependencies ++= Seq(
-      "com.typesafe" % "config" % "1.3.1",
-      "org.typelevel" %% "cats-core" % "1.1.0"
-    )
-  )
+/*
+  MODULE: "DQ_ROOT"
+ */
+lazy val root = (project in file(".")).settings(
+  name := "DataQuality-framework"
+).aggregate(core, common)
 
+/*
+  MODULE: "DQ_COMMON"
+ */
+lazy val common =
+  (project in file("dq-common"))
+    .settings(libraryDependencies ++= Dependencies.dq_common)
+
+/*
+  MODULE: "DQ_CORE"
+ */
 lazy val core = (project in file("dq-core"))
   .enablePlugins(UniversalPlugin, UniversalDeployPlugin)
   .settings(
-    scalaVersion := "2.10.6",
+    sparkVersion := sparkVersion.all(ScopeFilter(inProjects(ProjectRef(file("."), "root")))).value.head,
+    scalaVersion := calcVersionScala(sparkVersion.value),
     commonSettings,
-    libraryDependencies ++= Seq(
-      "org.apache.spark" %% "spark-core" % "1.6.0", //place % "provided" before deployment
-      "org.apache.spark" %% "spark-sql" % "1.6.0", //place % "provided" before deployment
-      "org.apache.spark" %% "spark-hive" % "1.6.0", //place % "provided" before deployment
-      
-      "com.databricks" %% "spark-avro" % "2.0.1",
-      "com.databricks" %% "spark-csv" % "1.5.0",
-      "org.apache.commons" % "commons-lang3" % "3.0",
-      "joda-time" % "joda-time" % "2.9.9",
-      "org.joda" % "joda-convert" % "1.9.2",
-      "com.github.scopt" %% "scopt" % "3.2.0",
-      "log4j" % "log4j" % "1.2.17",
-      "com.typesafe" % "config" % "1.3.1",
-      "org.isarnproject" %% "isarn-sketches" % "0.0.2",
-      "org.xerial" % "sqlite-jdbc" % "3.8.11.2",
-      "org.postgresql" % "postgresql" % "42.1.1",
-      "com.twitter" %% "algebird-core" % "0.13.0",
-      "org.apache.commons" % "commons-email" % "1.4",
-      "it.nerdammer.bigdata" % "spark-hbase-connector_2.10" % "1.0.3",
-      "org.scalatest" %% "scalatest" % "2.2.1" % "test"
-    ),
-    unmanagedResourceDirectories in Compile <+= baseDirectory(_ / "src/main/resources"),
+    libraryDependencies ++=  {
+      //val sv = sparkVersion.all(ScopeFilter(inProjects(ProjectRef(file("."), "root")))).value.head
+      Dependencies.dq_core ++ Dependencies.sparkDependenciesCalculation(sparkVersion.value)
+    },
+    unmanagedResourceDirectories in Compile += baseDirectory(_ / "src/main/resources").value,
     excludeFilter in Compile in unmanagedResources := "*",
     unmanagedJars in Compile += file("dq-core/lib/ojdbc7.jar"),
-    resolvers ++= Seq(
-      "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
-      "isarn project" at "https://dl.bintray.com/isarn/maven/"
-    ),
     assemblyExcludedJars in assembly := (fullClasspath in assembly).value.filter(_.data.getName startsWith "spark-assembly"),
     assemblyOption in assembly := (assemblyOption in assembly).value.copy(includeScala = true),
     test in assembly := {},
@@ -113,9 +110,13 @@ lazy val core = (project in file("dq-core"))
     },
     mappings in Universal <+= (assembly in Compile) map { jar =>
       jar -> ("lib/" + jar.getName)
-    }
+    },
+    assemblyJarName in assembly := s"dq-core_${sparkVersion.value}_${scalaVersion.value}.jar"
   )
 
+/*
+  MODULE: "DQ_UI"
+ */
 lazy val ui = (project in file("dq-ui"))
   .enablePlugins(PlayScala)
   .settings(
@@ -129,14 +130,14 @@ lazy val ui = (project in file("dq-ui"))
     libraryDependencies ++= {
       val ngVersion="4.4.4"
       Seq(
-        jdbc, cache, ws, specs2%Test, evolutions,
+        jdbc, cache, ws, specs2%Test, evolutions, guice,
         "com.typesafe.play" %% "play-json" % "2.5.14",
         "org.scalatestplus.play" %% "scalatestplus-play" % "2.0.0" % "test",
         "joda-time" % "joda-time" % "2.9.9",
         "org.joda" % "joda-convert" % "1.9.2",
         "org.squeryl" %% "squeryl" % "0.9.9",
         "com.gilt" % "jerkson_2.11" % "0.6.9",
-        "org.webjars" %% "webjars-play" % "2.5.0",
+        "org.webjars" %% "webjars-play" % "2.7.3",
         "org.postgresql" % "postgresql" % "42.1.1",
         "org.typelevel" %% "cats-core" % "1.1.0",
 
@@ -166,8 +167,6 @@ lazy val ui = (project in file("dq-ui"))
         "org.webjars.npm" % "ng2-codemirror" % "1.1.3",
 
         //tslint dependency
-        "org.webjars.npm" % "tslint-eslint-rules" % "3.4.0",
-        "org.webjars.npm" % "tslint-microsoft-contrib" % "4.0.0",
         "org.webjars.npm" % "types__jasmine" % "2.5.53" % "test",
         //test
         "org.webjars.npm" % "jasmine-core" % "2.6.4",
@@ -177,23 +176,59 @@ lazy val ui = (project in file("dq-ui"))
       )
     },
     dependencyOverrides += "org.webjars.npm" % "minimatch" % "3.0.0",
-
     // use the webjars npm directory (target/web/node_modules ) for resolution of module imports of angular2/core etc
     resolveFromWebjarsNodeModulesDir := true,
-
     // compile our tests as commonjs instead of systemjs modules
-    (projectTestFile in typescript) := Some("tsconfig.test.json"),
-
-    // use the combined tslint and eslint rules plus ng2 lint rules
-    (rulesDirectories in tslint) := Some(List(
-      tslintEslintRulesDir.value,
-      // codelyzer uses 'cssauron' which can't resolve 'through' see https://github.com/chrisdickinson/cssauron/pull/10
-      ng2LintRulesDir.value
-    )),
-
-    // the naming conventions of our test files
-    jasmineFilter in jasmine := GlobFilter("*Test.js") | GlobFilter("*Spec.js") | GlobFilter("*.spec.js"),
-    logLevel in jasmine := Level.Info,
-    logLevel in tslint := Level.Info,
-    logLevel in typescript := Level.Info
+    (projectTestFile in typescript) := Some("tsconfig.test.json")
   ).dependsOn(common)
+
+/*
+  MODULE: "DQ_API"
+ */
+lazy val api = (project in file("dq-api"))
+  .settings(
+    inThisBuild(
+      commonSettings ++ List(scalaVersion := "2.11.12")
+    ),
+    incOptions := incOptions.value.withNameHashing(true),
+    updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true),
+    libraryDependencies ++= {
+      val ngVersion="4.4.4"
+      Seq(
+        jdbc, cache, ws, specs2%Test, evolutions, guice,
+        "com.typesafe.play" %% "play-json" % "2.5.14",
+        "org.squeryl" %% "squeryl" % "0.9.9",
+        "org.postgresql" % "postgresql" % "42.1.1",
+        "com.gilt" % "jerkson_2.11" % "0.6.9",
+        "org.webjars" % "swagger-ui" % "3.1.5",
+        "org.scalatest"          %% "scalatest"          % "3.0.4" % Test,
+        "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+      )
+    }
+  )
+
+/*
+  MODULE: "DQ_BE"
+ */
+lazy val be = (project in file("dq-be"))
+  .enablePlugins(PlayScala)
+  .settings(
+    inThisBuild(
+      commonSettings ++ List(scalaVersion := "2.11.12")
+    ),
+    incOptions := incOptions.value.withNameHashing(true),
+    updateOptions := updateOptions.value.withCachedResolution(cachedResoluton = true),
+    libraryDependencies ++= {
+      val ngVersion="4.4.4"
+      Seq(
+        jdbc, cache, ws, specs2%Test, evolutions, guice,
+        "com.typesafe.play" %% "play-json" % "2.5.14",
+        "org.squeryl" %% "squeryl" % "0.9.9",
+        "org.postgresql" % "postgresql" % "42.1.1",
+        "com.gilt" % "jerkson_2.11" % "0.6.9",
+        "org.webjars" % "swagger-ui" % "3.1.5",
+        "org.scalatest"          %% "scalatest"          % "3.0.4" % Test,
+        "org.scalatestplus.play" %% "scalatestplus-play" % "3.1.2" % Test
+      )
+    }
+  ).dependsOn(api,common)

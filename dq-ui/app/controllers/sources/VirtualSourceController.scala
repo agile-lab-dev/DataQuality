@@ -1,9 +1,9 @@
 package controllers.sources
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
 import controllers.ControllerUtils._
+import controllers.utils.MyDBSession
 import controllers.utils.ValidationConstraints._
 import models.sources._
 import org.squeryl.PrimitiveTypeMode.inTransaction
@@ -18,7 +18,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 18/10/2017.
   */
-class VirtualSourceController @Inject()() extends Controller {
+class VirtualSourceController @Inject()(session: MyDBSession) extends Controller {
 
   private def getVSRCForm(currId: Option[String] = None): Form[(Source, VirtualSource)] = {
     def valFunc: (String) => Boolean = (t:String) => inTransaction(validateId(t, Source.getIdList(), currId))

@@ -30,6 +30,55 @@ Simply run `DQMasterBatch` class using your IDE or Java tools with the following
 
 - __-r__: _Optional._ Flag to repartition sources after reading.
 
+#### Configuration file
+
+The configuration file contains variables about storage or log features
+
+All parameters are inside **data_quality** object
+
+ - application_name, the application name (default **Data_Quality**)
+ - s3_bucket, bucket url (default "")
+ - hive_warehouse_path, hive absolute path (default "")
+ - hbase_host, hdase absolute path (default "")
+ - tmp_files_management
+   - local_fs_path, absolute path
+   - hdfs_path, absolute path
+ - metric_error_management
+   - dump_directory_path, absolute path
+   - dump_size, max number of collected errors for 1 metric for 1 partition (default **1000**)
+   - empty_file, to write a file also when result set is empty (default **false**)
+   - file_config
+     - format, file format (default **csv**)
+     - delimiter
+     - quote
+     - escape
+     - quote_mode
+ - virtual_sources_management
+   - dump_directory_path, absolute path
+   - file_format
+   - delimiter
+ - storage
+   - type, "NONE" or "DB"
+   - config
+     - subtype, "POSTGRES", "SQLITE" or "ORACLE"
+     - host
+     - user
+     - password
+     - schema
+ - mailing
+   - mode, valid values are "", ""internal" or "external". Note: internal SMTP thru bash script (check universal/bin/sendMail.sh for extra configuration)
+   - mail_script_path, absolute path
+   - config
+     - address, sender address
+     - hostname, SMTP host
+     - username, SMTP user
+     - password, SMTP password
+     - smtpPort, SMTP port
+     - sslOnConnect, SSL flag to enable secure connection
+   - notifications, true or false (default **false**)
+
+A complete example is into **dq-core/src/main/resources/conf** folder
+
 #### Distributed environment
 
 ##### Deployment

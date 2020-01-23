@@ -27,7 +27,7 @@ object PostprocessorType extends Enumeration {
     value.asInstanceOf[PostprocessorVal]
 }
 
-abstract class BasicPostprocessor(config: Config) {
+abstract class BasicPostprocessor(config: Config, settings: DQSettings){
   def process(vsRef: Set[HdfsFile],
               metRes: Seq[MetricResult],
               chkRes: Seq[CheckResult])(implicit fs: FileSystem,

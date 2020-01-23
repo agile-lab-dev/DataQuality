@@ -14,8 +14,8 @@ import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 
 import scala.collection.JavaConversions._
 
-final class ArrangePostprocessor(config: Config)
-    extends BasicPostprocessor(config) {
+final class ArrangePostprocessor(config: Config, settings: DQSettings)
+    extends BasicPostprocessor(config, settings) {
 
   private case class ColumnSelector(name: String, tipo: String = "") {
     def toColumn()(implicit df: DataFrame): Column = {
@@ -33,7 +33,7 @@ final class ArrangePostprocessor(config: Config)
   private val vs = config.getString("source")
   private val target: HdfsTargetConfig = {
     val conf = config.getConfig("saveTo")
-    utils.parseTargetConfig(conf).get
+    utils.parseTargetConfig(conf)(settings).get
   }
 
   private val columns: Seq[ColumnSelector] =

@@ -14,13 +14,13 @@ import org.apache.spark.sql.{DataFrame, SQLContext}
 
 import scala.collection.JavaConversions._
 
-final class TransposePostprocessor(config: Config)
-    extends BasicPostprocessor(config) {
+final class TransposePostprocessor(config: Config, settings: DQSettings)
+    extends BasicPostprocessor(config, settings: DQSettings) {
   private val vs = config.getString("source")
   private val keys = config.getStringList("keyColumns")
   private val target: HdfsTargetConfig = {
     val conf = config.getConfig("saveTo")
-    utils.parseTargetConfig(conf).get
+    utils.parseTargetConfig(conf)(settings).get
   }
 
   override def process(vsRef: Set[HdfsFile],
