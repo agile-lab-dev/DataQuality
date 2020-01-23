@@ -1,8 +1,8 @@
 package controllers.metrics
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
+import controllers.utils.MyDBSession
 import models.metrics.Metric.MetricType
 import models.metrics.{ColumnMetric, ComposedMetric, FileMetric, Metric}
 import org.squeryl.PrimitiveTypeMode._
@@ -15,7 +15,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 28/08/2017.
   */
-class MetricController @Inject()(val configuration: Configuration) extends Controller {
+class MetricController @Inject()(val configuration: Configuration,session: MyDBSession) extends Controller {
 
   private implicit val pageLength: Option[Int] = configuration.getInt("pagination.length")
 

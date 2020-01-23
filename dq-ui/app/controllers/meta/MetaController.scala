@@ -1,8 +1,8 @@
 package controllers.meta
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
+import controllers.utils.MyDBSession
 import controllers.utils.ResultWrappers._
 import models.checks.Check
 import models.checks.Check.CheckType
@@ -17,7 +17,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 19/10/2017.
   */
-class MetaController @Inject()() extends Controller {
+class MetaController @Inject()(session: MyDBSession) extends Controller {
 
   private object MetaType extends Enumeration {
     type MetaType = Value

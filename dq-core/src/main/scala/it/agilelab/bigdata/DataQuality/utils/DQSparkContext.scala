@@ -19,8 +19,8 @@ trait DQSparkContext {
       .set("spark.kryoserializer.buffer.max", "128")
       .set("spark.sql.parquet.compression.codec", "snappy")
 
-    if (!settings.s3Bucket.isEmpty) conf.set("spark.sql.warehouse.dir", settings.s3Bucket + "/data_quality_output/spark/warehouse")
     if (settings.local) conf.setMaster("local[*]")
+    if (settings.s3Bucket.isDefined) conf.set("spark.sql.warehouse.dir", settings.s3Bucket + "/data_quality_output/spark/warehouse")
     if (settings.hbaseHost.isDefined) conf.set("spark.hbase.host", settings.hbaseHost.get)
     f(conf)
   }

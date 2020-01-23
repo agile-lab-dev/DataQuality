@@ -182,6 +182,15 @@ object MetricProcessor extends Logging {
       case (_, _) =>
     }
 
+    // issue #5
+    val emptyMetrics: Seq[String] = columnMetricCalculators.values.flatMap((t: Seq[(MetricCalculator, Seq[ColumnMetric])]) => {
+      t.flatMap((i: (MetricCalculator, Seq[ColumnMetric])) => (i._1, i._2) match {
+        case (calc: StatusableCalculator, metrics : Seq[ColumnMetric]) if (calc.getFailCounter == 0) =>
+          metrics.map((m: ColumnMetric) => m.id)
+        case (_, _) => None
+      })
+    }).toSeq
+
     settings.errorFolderPath match {
       case Some(_) =>
         val accumulator: mutable.Seq[(Array[String], String)] =
@@ -194,6 +203,15 @@ object MetricProcessor extends Logging {
           .mapValues(_.map(_._2.split("<;>", -1).toSeq))
 
         trimmedAccumulator.foreach(metErrors => utils.saveErrors(sourceKeyFields, metErrors))
+
+        // issue #5
+        if(settings.errorDumpEmptyFile) {
+          emptyMetrics.foreach(e => {
+            val emptyValues : Seq[String] = sourceKeyFields.map(_ => "");
+            utils.saveErrors(sourceKeyFields, (e, mutable.Seq(emptyValues)))
+          })
+        }
+
       case None => log.info("No error dump path found")
     }
 

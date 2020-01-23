@@ -49,7 +49,12 @@ object ConfigReader {
         vs.insert()
     })
     parseMetrics(configObj)
-    parseComposedMetrics(configObj)
+
+    try {
+      parseComposedMetrics(configObj)
+    } catch {
+      case e => Logger.info(s"Missing or malformed Composed Metrics [${e.toString()}]")
+    }
     parseChecks(configObj)
     parseTargets(configObj)
     None

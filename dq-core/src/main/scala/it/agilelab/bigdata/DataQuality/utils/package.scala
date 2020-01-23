@@ -32,17 +32,17 @@ package object utils extends Logging {
   val doubleFractionFormat: Int             = 13
   val shortDateFormatter: DateTimeFormatter = DateTimeFormat.forPattern("yyyyMMdd")
 
-  def parseTargetConfig(config: Config): Option[HdfsTargetConfig] = {
+  def parseTargetConfig(config: Config)(implicit settings: DQSettings): Option[HdfsTargetConfig] = {
     Try {
       val name: Option[String] = Try(config.getString("fileName")).toOption
       val format               = config.getString("fileFormat")
       val path                 = config.getString("path")
 
-      val delimiter = Try(config.getString("delimiter")).toOption
+      val delimiter = settings.backComp.delimiterExtractor(config)
       val quote     = Try(config.getString("quote")).toOption
       val escape    = Try(config.getString("escape")).toOption
 
-      val quoteMode = Try(config.getString("quoteMode")).toOption
+      val quoteMode = settings.backComp.quoteModeExtractor(config)
 
       HdfsTargetConfig(name.getOrElse(""),
                        format,

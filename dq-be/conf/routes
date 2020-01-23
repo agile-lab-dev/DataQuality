@@ -1,0 +1,46 @@
+# Routes
+# This file defines all application routes (Higher priority routes first)
+# ~~~~
+
+
+# Routes for Checks API
+
+GET        /dataquality/v1/results/checks                                                                              api.ChecksApiController.getCheckList()
+GET        /dataquality/v1/results/checks/:checkId                                                                     api.ChecksApiController.checkById(checkId: String)
+GET        /dataquality/v1/results/checks/:checkId/startDate/:startDate/endDate/:endDate                               api.ChecksApiController.checkByIdInTimeInterval(checkId: String, startDate: String, endDate: String)
+GET        /dataquality/v1/results/checks/metric/:metricId                                                             api.ChecksApiController.getCheckListByMetricId(metricId: String)
+GET        /dataquality/v1/results/checks/source/:sourceId                                                             api.ChecksApiController.getCheckListBySourceId(sourceId: String)
+GET        /dataquality/v1/results/checks/source/:sourceId/startDate/:startDate/endDate/:endDate                       api.ChecksApiController.getCheckListBySourceIdInTimeInterval(sourceId: String, startDate: String, endDate: String)
+GET        /dataquality/v1/results/checks/source/:sourceId/status/:status/startDate/:startDate/endDate/:endDate        api.ChecksApiController.getCheckListBySourceIdAndStatusInTimeInterval(sourceId: String, status: String, startDate: String, endDate: String)
+GET        /dataquality/v1/results/checks/startDate/:startDate/endDate/:endDate                                        api.ChecksApiController.getCheckListInTimeInterval(startDate: String, endDate: String)
+GET        /dataquality/v1/results/checks/status/:status                                                               api.ChecksApiController.getCheckListByStatus(status: String)
+GET        /dataquality/v1/results/checks/status/:status/startDate/:startDate/endDate/:endDate                         api.ChecksApiController.getCheckListByStatusInTimeInterval(status: String, startDate: String, endDate: String)
+GET        /dataquality/v1/results/checks/tag/:tagId                                                                   api.ChecksApiController.getCheckListByTagId(tagId: String)
+GET        /dataquality/v1/results/checks/tag/:tagId/startDate/:startDate/endDate/:endDate                             api.ChecksApiController.getCheckListByTagIdInTimeInterval(tagId: String, startDate: String, endDate: String)
+
+# Routes for Metrics API
+
+GET        /dataquality/v1/results/metrics/:metricId                                                                   api.MetricsApiController.metricById(metricId: String)
+GET        /dataquality/v1/results/metrics/source/:sourceId                                                            api.MetricsApiController.metricsBySourceId(sourceId: String)
+GET        /dataquality/v1/results/metrics/source/:sourceId/startDate/:startDate/endDate/:endDate                      api.MetricsApiController.resultsMetricsBySourceIdInRangeInterval(sourceId: String, startDate: String, endDate: String)
+GET        /dataquality/v1/results/metrics/startDate/:startDate/endDate/:endDate                                       api.MetricsApiController.resultsMetricsInRangeInterval(startDate: String, endDate: String)
+
+# Routes for Sources API
+
+GET        /dataquality/v1/sources                                                                                     api.SourcesApiController.sourcesList()
+GET        /dataquality/v1/sources/:sourceId                                                                           api.SourcesApiController.sourceById(sourceId: String)
+GET        /dataquality/v1/sources/:sourceId/tree                                                                      api.SourcesApiController.getTreeById(sourceId: String)
+
+
+
+GET        /dataquality/v1/virtualsources/tree                                                                         api.SourcesApiController.getVirtualsourcesBySourceId()
+
+
+GET        /dataquality/v1/config                                                                                      api.ConfigController.getConfiguration(sourceIDs: java.util.List[String])
+
+# Map static resources from the /public folder to the /assets URL path
+GET        /assets/*file                                                                                               controllers.Assets.at(file)
+GET        /versionedAssets/*file                                                                                      controllers.Assets.versioned(file)
+
+# Swagger UI
+GET        /api                                                                                                        api.ApiDocController.api

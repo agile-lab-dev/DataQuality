@@ -1,9 +1,9 @@
 package controllers.checks
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
 import controllers.ControllerUtils._
+import controllers.utils.MyDBSession
 import controllers.utils.ValidationConstraints._
 import models.checks.Check.CheckType
 import models.checks._
@@ -22,7 +22,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 29/08/2017.
   */
-class TrendCheckController @Inject()() extends Controller {
+class TrendCheckController @Inject()(session: MyDBSession) extends Controller {
 
   private def getMainForm(currId: Option[String] = None): Form[(Check, TrendCheck, List[CheckParameter])] = {
     def valFunc: (String) => Boolean = (t:String) => inTransaction(validateId(t, Check.getIdList(), currId))

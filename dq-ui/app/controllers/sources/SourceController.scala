@@ -1,8 +1,8 @@
 package controllers.sources
 
 import javax.inject.Inject
-
 import com.codahale.jerkson.Json.generate
+import controllers.utils.MyDBSession
 import models.sources.Source.SourceType
 import models.sources._
 import org.squeryl.PrimitiveTypeMode._
@@ -15,7 +15,7 @@ import scala.util.Try
 /**
   * Created by Egor Makhov on 24/08/2017.
   */
-class SourceController @Inject()(val configuration: Configuration) extends Controller {
+class SourceController @Inject()(val configuration: Configuration,session: MyDBSession) extends Controller {
 
   private implicit val pageLength: Option[Int] = configuration.getInt("pagination.length")
 
