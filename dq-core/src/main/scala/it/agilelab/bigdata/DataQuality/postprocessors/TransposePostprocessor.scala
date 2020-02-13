@@ -34,17 +34,17 @@ final class TransposePostprocessor(config: Config, settings: DQSettings)
 
     def toLong(df: DataFrame, by: Seq[String]): DataFrame = {
       val (cols, types) = df.dtypes.filter { case (c, _) => !by.contains(c) }.unzip
-      require(types.distinct.size == 1)
+      require(types.distinct.length == 1)
 
       val kvs = explode(
         array(
-          cols.map(c => struct(lit(c).alias("KEY"), col(c).alias("VALUE"))): _*
+          cols.map(c => struct(lit(c).alias(settings.backComp.trKeyName), col(c).alias(settings.backComp.trValueName))): _*
         ))
 
       val byExprs = by.map(col)
 
       df.select(byExprs :+ kvs.alias("_kvs"): _*)
-        .select(byExprs ++ Seq($"_kvs.KEY", $"_kvs.VALUE"): _*)
+        .select(byExprs ++ Seq($"_kvs.${settings.backComp.trKeyName}", $"_kvs.${settings.backComp.trValueName}"): _*)
     }
 
     val reqVS: HdfsFile = vsRef.filter(vr => vr.id == vs).head

@@ -5,7 +5,7 @@ import sbt.Keys.{scalaVersion, test}
 import sbtassembly.AssemblyPlugin.autoImport.{assemblyExcludedJars, assemblyOption}
 
 lazy val commonSettings = Seq(
-  version := "1.2.0"
+  version := "1.2.1"
 )
 
 sparkVersion := "2.4.0" // default spark version
@@ -27,8 +27,7 @@ resolvers ++= Seq(
   "Maven Repository" at "https://repo1.maven.org/maven2",
   "Apache Repositroy" at "https://repository.apache.org/content/repositories/releases",
   "Typesafe repository" at "https://repo.typesafe.com/typesafe/releases/",
-  "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/",
-  "Isarn Project" at "https://dl.bintray.com/isarn/maven/"
+  "Cloudera" at "https://repository.cloudera.com/artifactory/cloudera-repos/"
 )
 
 def calcVersionScala(sparkVersion: String): String = {
