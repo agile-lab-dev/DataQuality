@@ -14,6 +14,8 @@ sealed trait BackCompatibilityConfiguration {
   val quoteModeExtractor: Config => Option[String]
 
   // Post processing formatters
+  val trKeyName: String
+  val trValueName: String
   val keyFormatter: Int => String
   val valueFormatter: Int => String
 
@@ -36,27 +38,33 @@ object BackCompatibilityConfiguration {
 // Used in pre-release versions
 class V0 extends BackCompatibilityConfiguration {
   override val delimiterExtractor: Config => Option[String] =
-    (conf: Config) => Try(conf.getString("separator")).toOption
+    (conf: Config) => Try(conf.getString("delimiter")).toOption
   override val quoteModeExtractor: Config => Option[String] =
     (conf: Config) => Try(conf.getBoolean("quoted")) match {
       case Success(true) => Some("ALL")
       case _ => Some("NONE")
     }
 
+  override val trKeyName: String = "VARIABLE"
+  override val trValueName: String = "VARIABLE_VALUE"
+
   override val keyFormatter: Int => String = (x: Int) => s"KEY$x"
   override val valueFormatter: Int => String = (x: Int) => s"KEY${x}_VALUE"
 
-  val fileMetricTargetType = "FILE-METRICS"
-  val columnMetricTargetType = "COLUMN-METRICS"
-  val composedMetricTargetType = "COMPOSED-METRICS"
-  val checkTargetType = "CHECKS"
-  val loadCheckTargetType = "LOAD-CHECKS"
+  override val fileMetricTargetType = "FILE-METRICS"
+  override val columnMetricTargetType = "COLUMNAR-METRICS"
+  override val composedMetricTargetType = "COMPOSED-METRICS"
+  override val checkTargetType = "CHECKS"
+  override val loadCheckTargetType = "LOAD-CHECKS"
 }
 
 // Used in 1.0 version
 class V1 extends V0 {
+  override val trKeyName: String = "KEY"
+  override val trValueName: String = "VALUE"
+
   override val keyFormatter: Int => String = (x: Int) => s"KEY_$x"
-  override val valueFormatter: Int => String = (x: Int) => s"VALUE_${x}"
+  override val valueFormatter: Int => String = (x: Int) => s"VALUE_$x"
 }
 
 // Used in 1.1 version

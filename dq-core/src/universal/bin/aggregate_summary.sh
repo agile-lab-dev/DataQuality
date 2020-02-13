@@ -16,7 +16,7 @@ SUMMARY_REGEX=${SCRIPT_DIR}"/../tmp/"${START_TIME}"-*/*/summary.csv"
 
 cat $SUMMARY_REGEX > $SUMMARY_DIR"/summary.csv"
 
-export MAIL_TO="EMAKHOV.external3@unicredit.eu PTomeo.external@unicredit.eu"
+export MAIL_TO="username@mail.com"
 bash ${SCRIPT_DIR}"/send_mail.sh" "Content:\n$( cat $SUMMARY_DIR"/summary.csv" )" "SUMMARY"
 
 echo "SUCCESS"
