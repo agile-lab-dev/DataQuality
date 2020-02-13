@@ -40,9 +40,9 @@ object Dependencies {
 
   def sparkDependenciesCalculation(sparkVersion:String): Seq[ModuleID] =
     Seq(
-      "org.apache.spark" %% "spark-core" % sparkVersion,
-      "org.apache.spark" %% "spark-sql" % sparkVersion,
-      "org.apache.spark" %% "spark-hive" % sparkVersion
+      "org.apache.spark" %% "spark-core" % sparkVersion % "provided",
+      "org.apache.spark" %% "spark-sql" % sparkVersion % "provided",
+      "org.apache.spark" %% "spark-hive" % sparkVersion % "provided"
     )
 
 }

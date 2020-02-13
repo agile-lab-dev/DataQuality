@@ -107,6 +107,49 @@ Supported types:
 - Int
 - Long
 
+It could be able to format a string or a number. 
+
+### Declare number precision
+
+In the following example the **amount** column has the number precision equals to 5 (e.g. 1.00441 or 1.00000)
+
+```hocon
+{
+    mode: "arrange"
+    config: {
+      source: "tera_enriched"
+      columnOrder: [{"battle_number":"double"}, "name", {"amount": {"double": 5}}]
+      saveTo: {
+        fileName: "tera_arranged"
+        fileFormat: "csv"
+        path: "./tmp/postproc"
+        delimiter: ","
+      }
+    }
+  }
+```
+
+
+### Format a string
+
+In the following example the **surname** column has a prefix _Hello_ (e.g. Hello Carl)
+
+```hocon
+{
+    mode: "arrange"
+    config: {
+      source: "tera_enriched"
+      columnOrder: [{"battle_number":"double"}, "name", {"surname": {"STRING": "Hello %s"}}, {"y_avg":"int"}]
+      saveTo: {
+        fileName: "tera_arranged"
+        fileFormat: "csv"
+        path: "./tmp/postproc"
+        delimiter: ","
+      }
+    }
+  }
+``` 
+
 ## Example
 
 ```hocon
