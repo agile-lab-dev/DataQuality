@@ -4,7 +4,7 @@ object Version {
   val commonLang = "3.0"
   val commonMail = "1.4"
   val hbaseConnector = "1.0.3"
-  val isarn = "0.0.2"
+  val isarn = "0.1.1"
   val jodaTime = "2.9.9"
   val jodaConvert = "1.9.2"
   val log4j = "1.2.17"
