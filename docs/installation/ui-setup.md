@@ -3,7 +3,6 @@ The UI to create configuration for Data Quality framework
 
 
 ## Quick Start
-
 ###Prerequisites
 
 DataQuality UI has some requirements:
