@@ -1,7 +1,6 @@
 ####DataQuality - UI
 The UI to create configuration for Data Quality framework 
 
-
 ## Quick Start
 ###Prerequisites
 
