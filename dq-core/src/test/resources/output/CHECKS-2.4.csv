@@ -1,0 +1,2 @@
+checkId,checkName,description,checkedFile,baseMetric,comparedMetric,comparedThreshold,status,message,execDate
+depth_avg_check,GREATER_THAN,Checks is average of depth is greather than 10,USGS_2000,depth_avg,"",50.0,Success,Check depth_avg_check for metric AVG_NUMBER on column USGS_2000[Buffer(Depth)] check if (MetricResult) 85.05389330922242 is GREATER_THAN 50.0 (compareMetric/threshold). Result: Success. CheckStatus: 85.05389330922242 > 50.0.,2019-01-01

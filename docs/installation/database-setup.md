@@ -56,6 +56,13 @@ Configure core application setup in [application.conf](/dq-core/src/main/resourc
     }
   }
 ```
+- to setup core database using AWS Secrets Manager:
+```hocon
+  storage:{
+    type: "DB"
+    secrets_manager: "AWS-secrets-manager-name"
+  }
+```
 - setup a hive connection:
 ```hocon
   hiveDir: "" //${HIVE_PATH}

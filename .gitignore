@@ -67,7 +67,7 @@ lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
-project/target
+project/target/*
 project/project/target/
 
 # Scala-IDE specific
@@ -86,3 +86,5 @@ project/project/target/
 
 # End of https://www.gitignore.io/api/intellij,scala,sbt
 .idea/
+
+tmp/*

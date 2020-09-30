@@ -100,7 +100,7 @@ class ConfigReader(configPath: String)(implicit sqlWriter: HistoryDBManager, set
 
           val header = Try(generalConfig.getBoolean("header")).getOrElse(false)
 
-          val delimiter = settings.backComp.delimiterExtractor(generalConfig)
+          val delimiter: Option[String] = settings.backComp.delimiterExtractor(generalConfig)
           val quote     = Try(generalConfig.getString("quote")).toOption
           val escape    = Try(generalConfig.getString("escape")).toOption
 

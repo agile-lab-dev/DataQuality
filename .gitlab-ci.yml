@@ -1,0 +1,35 @@
+image: hseeberger/scala-sbt:8u242_1.3.8_2.12.10
+
+variables:
+  SBT_OPTS: >
+    -Dsbt.global.base=$CI_PROJECT_DIR/sbt-cache/sbtboot
+    -Dsbt.boot.directory=$CI_PROJECT_DIR/sbt-cache/boot
+    -Dsbt.ivy.home=$CI_PROJECT_DIR/sbt-cache/ivy
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+      - "$CI_PROJECT_DIR/sbt-cache"
+
+stages:
+  - test
+  - assembly
+
+test-1.6:
+  stage: test
+  script:
+    - sbt -Dfile.encoding=UTF-8 "project core" 'set sparkVersion:="1.6.0"' 'testOnly * -- -n it.agilelab.bigdata.DataQuality.Spark1xTest'
+
+test-2.4:
+  stage: test
+  script:
+    - sbt -Dfile.encoding=UTF-8 "project core" 'set sparkVersion:="2.4.0"' 'testOnly * -- -n it.agilelab.bigdata.DataQuality.Spark2xTest'
+
+assembly-1.6:
+  stage: assembly
+  script:
+    - sbt "project core" 'set sparkVersion:="1.6.0"' assembly
+
+assembly-2.4:
+  stage: assembly
+  script:
+    - sbt "project core" 'set sparkVersion:="2.4.0"' assembly
