@@ -80,6 +80,7 @@ lazy val core = (project in file("dq-core"))
       }
       ((resourceDirectory in Compile).value / confFile) -> "conf/application.conf"
     },
+
     Universal / mappings ++= {
       val integrationFolder = integrationEnv.value match {
         case _ => "integration/dev"
