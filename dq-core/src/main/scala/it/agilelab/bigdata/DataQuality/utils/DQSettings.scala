@@ -96,10 +96,13 @@ class DQSettings(conf: Config,
   }
   val notifications: Boolean = DQSettings.getConfigOption[Boolean]("mailing.notifications", conf).getOrElse(false)
 
-  val resStorage: Option[DatabaseConfig] = conf.getString("storage.type") match {
-    case "DB" => Some(new DatabaseConfig(conf.getConfig("storage.config")))
-    case "NONE" => None
-    case x    => throw IllegalParameterException(x)
+  val resStorage: Option[DatabaseConfig] = DQSettings.getConfigOption[String]("storage.secrets_manager", conf) match {
+    case Some(x) => Some( RdsCredentials.credentialsToDatabaseConnection(RdsCredentials.getCredentials(x)) )
+    case None => conf.getString("storage.type") match {
+      case "DB" => Some(new DatabaseConfig(conf.getConfig("storage.config")))
+      case "NONE" => None
+      case x    => throw IllegalParameterException(x)
+    }
   }
 
   // Internal values

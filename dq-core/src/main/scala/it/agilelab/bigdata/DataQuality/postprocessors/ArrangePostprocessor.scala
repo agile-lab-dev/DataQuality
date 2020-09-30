@@ -17,7 +17,7 @@ import scala.collection.JavaConversions._
 final class ArrangePostprocessor(config: Config, settings: DQSettings)
     extends BasicPostprocessor(config, settings) {
 
-  private case class ColumnSelector(name: String, tipo: Option[String] = None, format: Option[String] = None, precision: Option[Integer] = None) {
+  case class ColumnSelector(name: String, tipo: Option[String] = None, format: Option[String] = None, precision: Option[Integer] = None) {
     def toColumn()(implicit df: DataFrame): Column = {
 
       val dataType: Option[NumericType with Product with Serializable] =
@@ -48,7 +48,7 @@ final class ArrangePostprocessor(config: Config, settings: DQSettings)
     utils.parseTargetConfig(conf)(settings).get
   }
 
-  private val columns: Seq[ColumnSelector] =
+  val columns: Seq[ColumnSelector] =
     config.getAnyRefList("columnOrder").map {
       case x: String => ColumnSelector(x)
       case x: java.util.HashMap[_, String] => {

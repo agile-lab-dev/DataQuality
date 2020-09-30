@@ -1,22 +1,18 @@
 import sbt.addSbtPlugin
 
-logLevel := Level.Warn
+// General plugins
+addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "5.2.4") // Eclipse compatibility
+addSbtPlugin("org.scalameta" % "sbt-scalafmt" % "2.2.1")
+addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.10.0-RC1")
+addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.5.0")
 
-addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.3")
-addSbtPlugin("com.typesafe.sbteclipse" % "sbteclipse-plugin" % "4.0.0")
-addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.2.0")
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "0.14.10") // Creates fat Jars
+addSbtPlugin("com.typesafe.sbt" % "sbt-native-packager" % "1.6.1") // Creates universal packages
 
-// provides server side compilation of typescript to ecmascript 5 or 3
-addSbtPlugin("name.de-vries" % "sbt-typescript" % "2.5.2")
-// checks your typescript code for error prone constructions
-//addSbtPlugin("name.de-vries" % "sbt-tslint" % "5.1.0")
-// runs jasmine tests
-addSbtPlugin("name.de-vries" % "sbt-jasmine" % "0.0.3")
-addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.0")
-addSbtPlugin("com.timushev.sbt" % "sbt-updates" % "0.1.10")
-addSbtPlugin("net.virtual-void" % "sbt-dependency-graph" % "0.8.2")
-
-resolvers += "Typesafe repository" at "http://repo.typesafe.com/typesafe/releases/"
-// The Play plugin
+// Web application plugins
 addSbtPlugin("com.typesafe.play" % "sbt-plugin" % "2.7.3")
-//addSbtPlugin("org.irundaia.sbt" % "sbt-sassify" % "1.4.13")
+addSbtPlugin("com.typesafe.sbt" % "sbt-digest" % "1.1.4")
+
+addSbtPlugin("name.de-vries" % "sbt-typescript" % "2.6.2")
+addSbtPlugin("name.de-vries" % "sbt-tslint" % "5.7.0")
+addSbtPlugin("name.de-vries" % "sbt-jasmine" % "0.0.4")

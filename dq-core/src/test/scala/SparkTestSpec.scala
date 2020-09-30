@@ -23,7 +23,7 @@ class SparkTestSpec extends FunSuite with BeforeAndAfterAll {
   r.setSeed(123)
 
   val settings: DQSettings = new DQSettings(
-    conf = ConfigFactory.parseURL(getClass.getResource("/application.conf")).getConfig("dataquality"),
+    conf = ConfigFactory.parseURL(getClass.getResource("/application.conf")).getConfig("data_quality"),
     configFilePath = getClass.getResource("/conf/test.conf").getPath,
     repartition = false,
     local = true,
@@ -47,7 +47,7 @@ class SparkTestSpec extends FunSuite with BeforeAndAfterAll {
   test("parse basic conf") {
     val configuration = new ConfigReader(settings.configFilePath)(localSqlWriter, settings)
 
-    val testSource: HdfsFile = HdfsFile("T1", "./t1.csv", "csv", true, "2018-03-26", None)
+    val testSource: HdfsFile = HdfsFile("T1", "./t1.csv", "csv", true, "2018-03-26", Some(","))
     val sources: Map[String, SourceConfig] = configuration.sourcesConfigMap
     assert(sources.keySet.size == 3, "Should be equal 3")
     assert(sources.keySet == Set("T1","T2","T3"))
