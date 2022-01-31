@@ -1,7 +1,9 @@
+import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicNumericMetrics.{StdAvgDecimalValueCalculator, SumDecimalValueMetricCalculator}
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.BasicStringMetrics.RegexValuesMetricCalculator
 import it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics.MultiColumnMetrics.CovarianceMetricCalculator
 import it.agilelab.bigdata.DataQuality.metrics.MetricCalculator
 import org.scalatest._
+import org.apache.spark.sql.types.Decimal
 
 import scala.util.Random
 
@@ -80,6 +82,35 @@ class BasicStringMetricsSpec extends WordSpec with Matchers {
       assert(mc.lMean == mean(seq).get)
       assert(mc.n == seq.length)
       assert(mc.result()("COVARIANCE")._1 == variance(seq).get)
+    }
+
+    "SUM_DECIMAL_NUMBER Metric calc - decimal numbers" in {
+      val seq: Seq[Decimal] = Seq(Decimal(100D), Decimal(1.20E18D), Decimal(1.20E18D))
+      val mc = seq
+        .zip(seq)
+        .foldLeft[MetricCalculator](new SumDecimalValueMetricCalculator(params))((met, vals) =>
+          met.increment(Seq(vals._1, vals._2)))
+        .asInstanceOf[SumDecimalValueMetricCalculator]
+
+      assert(mc.sum == Decimal("2400000000000000100"))
+
+      val res = mc.result()
+
+      assert(res == Map("SUM_DECIMAL_NUMBER" -> (2400000000000000100D, None)))
+
+    }
+
+    "STD_DECIMAL_NUMBER and AVG_DECIMAL_NUMBER test" in {
+      val seq: Seq[Decimal] = Seq(Decimal(1D), Decimal(10D), Decimal(100D))
+      val mc = seq
+        .zip(seq)
+        .foldLeft[MetricCalculator](new StdAvgDecimalValueCalculator(params))((met, vals) =>
+          met.increment(Seq(vals._1, vals._2)))
+        .asInstanceOf[StdAvgDecimalValueCalculator]
+
+      val res = mc.result()
+
+      assert(res == Map("STD_DECIMAL_NUMBER" -> (44.69899327725402D, None), "AVG_DECIMAL_NUMBER" -> (37D, None)))
     }
 
   }

@@ -1,0 +1,2 @@
+#!/bin/bash
+sbt -Dfile.encoding=UTF-8 "project core" 'set sparkVersion:="2.4.0"' 'clean' 'coverageOn' 'testOnly * -- -n it.agilelab.bigdata.DataQuality.Spark2xTest' 'coverageOff' 'coverageReport' 'coverageAggregate'

@@ -14,20 +14,11 @@ stages:
   - test
   - assembly
 
-test-1.6:
-  stage: test
-  script:
-    - sbt -Dfile.encoding=UTF-8 "project core" 'set sparkVersion:="1.6.0"' 'testOnly * -- -n it.agilelab.bigdata.DataQuality.Spark1xTest'
-
 test-2.4:
   stage: test
   script:
-    - sbt -Dfile.encoding=UTF-8 "project core" 'set sparkVersion:="2.4.0"' 'testOnly * -- -n it.agilelab.bigdata.DataQuality.Spark2xTest'
-
-assembly-1.6:
-  stage: assembly
-  script:
-    - sbt "project core" 'set sparkVersion:="1.6.0"' assembly
+    - ./scripts/test-only-spark2.sh
+  coverage: '/Statement coverage.: (.*\%)/'
 
 assembly-2.4:
   stage: assembly

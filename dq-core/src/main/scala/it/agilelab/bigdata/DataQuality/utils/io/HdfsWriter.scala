@@ -8,11 +8,12 @@ import it.agilelab.bigdata.DataQuality.metrics._
 import it.agilelab.bigdata.DataQuality.targets.{HdfsTargetConfig, SystemTargetConfig, TargetConfig}
 import it.agilelab.bigdata.DataQuality.utils.enums.Targets
 import it.agilelab.bigdata.DataQuality.utils.{Logging, _}
-import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, FileUtil, Path}
-import org.apache.spark.SparkContext
-import org.apache.spark.sql.types.StringType
-import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
+import org.apache.hadoop.fs.{FSDataOutputStream, FileSystem, Path}
+import org.apache.hadoop.io.IOUtils
+import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.{DataFrame, Row, SQLContext, SaveMode}
+
+import scala.util.Try
 
 /**
   * Created by Gianvito Siciliano on 13/12/16.
@@ -20,6 +21,8 @@ import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
   * HDFS writing manager
   */
 object HdfsWriter extends Logging {
+
+  implicit def toPath(path: String) = new Path(path)
 
   def processSystemTarget(conf: TargetConfig, finalCheckResults: Seq[CheckResult])(implicit sqlContext: SQLContext,
                                                                                    fs: FileSystem,
@@ -61,7 +64,7 @@ object HdfsWriter extends Logging {
 
   def saveVirtualSource(source: DataFrame, targetConfig: HdfsTargetConfig, execDate: String)(
       implicit fs: FileSystem,
-      sparkContext: SparkContext): Unit = {
+      sQLContext: SQLContext): Unit = {
     saveCsv(source, targetConfig)
   }
 
@@ -102,7 +105,7 @@ object HdfsWriter extends Logging {
 
       target.fileFormat.toUpperCase match {
         case "CSV" | "TXT" =>
-          saveCsv(df, target)(fs, sqlContext.sparkContext)
+          saveCsv(df, target)
         case "PARQUET" =>
           saveParquet(df, target, target.date.getOrElse(execDate))
         case _ => throw IllegalParameterException(target.fileFormat.toUpperCase)
@@ -120,7 +123,7 @@ object HdfsWriter extends Logging {
 
     target.fileFormat.toUpperCase match {
       case "CSV" | "TXT" =>
-        saveCsv(df, target)(fs, sqlContext.sparkContext)
+        saveCsv(df, target)(fs, sqlContext)
       case "PARQUET" =>
         saveParquet(df, target, target.date.getOrElse(execDate))
       case _ => throw IllegalParameterException(target.fileFormat.toUpperCase)
@@ -133,48 +136,51 @@ object HdfsWriter extends Logging {
     * @param targetConfig target configuration
     * @param fs file system
     */
-  private def saveCsv(df: DataFrame, targetConfig: HdfsTargetConfig)(
-      implicit fs: FileSystem,
-      sparkContext: SparkContext): Unit = {
-    log.debug("path: " + targetConfig.path)
+  private def saveCsv(df: DataFrame, targetConfig: HdfsTargetConfig)(implicit fs: FileSystem,
+                                                                     sqlContext: SQLContext): Unit = {
+    def write(dataFrame: DataFrame, path: String): Unit = {
+      log.info("writing file: " + path)
 
-    val tempFileName = targetConfig.path + "/" + targetConfig.fileName + ".tmp" //-${targetConfig.subType}
-    val fileName     = targetConfig.path + "/" + targetConfig.fileName + "." + targetConfig.fileFormat //-${targetConfig.subType}
+      dataFrame.write
+        .format("com.databricks.spark.csv")
+        .option("header", "false")
+        .option("quoteAll", targetConfig.quoteMode match {
+          case Some("ALL") => "true"
+          case _ => "false"
+        })
+        .option("delimiter", targetConfig.delimiter.getOrElse(","))
+        .option("quote", targetConfig.quote.getOrElse("\""))
+        .option("escape", targetConfig.escape.getOrElse("\\"))
+        .option("nullValue", "")
+        .mode(SaveMode.Overwrite)
+        .save(path)
 
-    log.debug("writing temp csv file: " + tempFileName)
-    df.write
-      .format("com.databricks.spark.csv")
-      .option("header", "false")
-      .option("quoteMode", targetConfig.quoteMode.getOrElse("MINIMAL"))
-      .option("delimiter", targetConfig.delimiter.getOrElse(","))
-      .option("quote", targetConfig.quote.getOrElse("\""))
-      .option("escape", targetConfig.escape.getOrElse("\\"))
-      .option("nullValue", "")
-      .mode(SaveMode.Overwrite)
-      .save(tempFileName)
+      log.debug("file: " + path + " written")
+    }
 
-    val header: String =
-      if (targetConfig.quoteMode == Some("ALL")) {
-        df.schema.fieldNames.mkString("\"", "\"" + s"${targetConfig.delimiter.getOrElse(",").toString}" + "\"", "\"")
-      } else {
-        df.schema.fieldNames.mkString(targetConfig.delimiter.getOrElse(","))
-      }
+    val rootPath   = targetConfig.path + "/" + targetConfig.fileName
+    val dataPath   = rootPath + ".data"
+    val headerPath = rootPath + ".head"
+    val targetPath = rootPath + "." + targetConfig.fileFormat
 
-    log.debug("temp csv file: " + tempFileName + " has been written")
+    val headerDataFrame =
+      sqlContext.createDataFrame(
+        sqlContext.sparkContext.parallelize(Seq(Row.fromSeq(df.schema.fields.map(field => field.name)))),
+        StructType(df.schema.fields.map(field => StructField(field.name, StringType)))
+      )
 
     try {
-      val path = new Path(fileName)
-      if (fs.exists(path)) fs.delete(path, false)
-      val headerOutputStream: FSDataOutputStream =
-        fs.create(new Path(tempFileName + "/header"))
-      headerOutputStream.writeBytes(header + "\n")
-      headerOutputStream.close()
-      FileUtil.copyMerge(fs, new Path(tempFileName), fs, path, true, new Configuration(), null)
+      write(headerDataFrame, headerPath)
+      write(df, dataPath)
+
+      fs.delete(targetPath, true)
+      log.debug("delete target path: " + targetPath)
+
+      copyMerge("csv", fs, Seq(headerPath, dataPath), fs, targetPath, true)
     } catch {
       case ioe: IOException => log.warn(ioe)
     }
 
-    log.debug("final csv file: " + fileName + " merged")
     log.debug("'write output' step finished")
   }
 
@@ -201,9 +207,48 @@ object HdfsWriter extends Logging {
 
     log.info("temp parquet file: " + tempFileName + " written")
 
-    FileUtil.copyMerge(fs, new Path(tempFileName), fs, new Path(fileName), true, new Configuration(), null)
+    fs.delete(fileName, true)
+    copyMerge("parquet", fs, Seq(tempFileName), fs, fileName, true)
 
     log.info("final parquet file: " + fileName + " merged")
     log.info("'write output' step finished")
+  }
+
+  // scala porting/adaptation of original java from hadoop 2.7
+  private def copyMerge(
+      format: String,
+      sourceFileSystem: FileSystem,
+      sourceDirectories: Seq[String],
+      destinationFileSystem: FileSystem,
+      destinationFile: String,
+      deleteSource: Boolean = false
+  ): Unit = {
+
+    val outputStream: FSDataOutputStream = destinationFileSystem.create(destinationFile)
+
+    val errors =
+      sourceDirectories
+        .flatMap(sourceFileSystem.listStatus(_))
+        .filter(status => status.isFile && status.getPath.toString.endsWith("." + format))
+        .map(status =>
+          Try {
+            val inputStream = sourceFileSystem.open(status.getPath)
+            IOUtils.copyBytes(inputStream, outputStream, sourceFileSystem.getConf, false)
+            inputStream.close()
+            log.debug("copied file: " + status.getPath)
+        })
+        .filter(_.isFailure)
+
+    outputStream.close()
+
+    if (!errors.isEmpty)
+      throw errors.head.failed.get
+
+    // Clean source target
+    if (deleteSource)
+      for (sourceDirectory <- sourceDirectories) {
+        sourceFileSystem.delete(sourceDirectory, true)
+        log.debug("removed source: " + sourceDirectory)
+      }
   }
 }

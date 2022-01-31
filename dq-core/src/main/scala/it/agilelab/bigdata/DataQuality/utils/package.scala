@@ -14,7 +14,7 @@ import org.apache.hadoop.fs.{FileSystem, Path}
 import org.apache.spark.SparkContext
 import org.apache.spark.rdd.RDD
 import org.apache.spark.sql.{Row, SQLContext}
-import org.apache.spark.sql.types.{StringType, StructField, StructType}
+import org.apache.spark.sql.types.{Decimal, StringType, StructField, StructType}
 import org.joda.time.format.{DateTimeFormat, DateTimeFormatter}
 
 import scala.collection.immutable.TreeMap
@@ -314,6 +314,21 @@ package object utils extends Logging {
     schema match {
       case Some(x) => x + sep + table
       case None    => table
+    }
+  }
+
+  /**
+   * Tries to cast any value to Decimal
+   * Used in metric calculators
+   * @param value value to cast
+   *
+   * @return Option of Decimal. If it's null return None
+   */
+  def tryToDecimal(value: Any): Option[Decimal] = {
+    value match {
+      case null           => None
+      case x: Decimal      => Some(x)
+      case x              => Try(Decimal(x.toString)).toOption
     }
   }
 

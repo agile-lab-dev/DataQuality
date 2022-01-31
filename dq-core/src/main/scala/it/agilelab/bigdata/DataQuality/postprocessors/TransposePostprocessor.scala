@@ -52,9 +52,7 @@ final class TransposePostprocessor(config: Config, settings: DQSettings)
 
     val transposed: DataFrame = toLong(df, keys)
 
-    HdfsWriter.saveVirtualSource(transposed, target, settings.refDateString)(
-      fs,
-      sqlContext.sparkContext)
+    HdfsWriter.saveVirtualSource(transposed, target, settings.refDateString)
 
     new HdfsFile(target)
   }

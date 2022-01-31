@@ -1,28 +1,66 @@
-# Created by https://www.gitignore.io/api/intellij,scala,sbt
+# IntelliJ IDEA
+.idea
 
-### Intellij ###
+# Spark tmp dir
+tmp
+
+#Docker Data
+docker/data
+
+### macOS template
+# General
+*.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+### JetBrains template
 # Covers JetBrains IDEs: IntelliJ, RubyMine, PhpStorm, AppCode, PyCharm, CLion, Android Studio and Webstorm
 # Reference: https://intellij-support.jetbrains.com/hc/en-us/articles/206544839
 
 # User-specific stuff:
-.idea/workspace.xml
-.idea/tasks.xml
+.idea/**/workspace.xml
+.idea/**/tasks.xml
+.idea/dictionaries
 
 # Sensitive or high-churn files:
-.idea/dataSources/
-.idea/dataSources.ids
-.idea/dataSources.xml
-.idea/dataSources.local.xml
-.idea/sqlDataSources.xml
-.idea/dynamic.xml
-.idea/uiDesigner.xml
+.idea/**/dataSources/
+.idea/**/dataSources.ids
+.idea/**/dataSources.xml
+.idea/**/dataSources.local.xml
+.idea/**/sqlDataSources.xml
+.idea/**/dynamic.xml
+.idea/**/uiDesigner.xml
 
 # Gradle:
-.idea/gradle.xml
-.idea/libraries
+.idea/**/gradle.xml
+.idea/**/libraries
+
+# CMake
+cmake-build-debug/
 
 # Mongo Explorer plugin:
-.idea/mongoSettings.xml
+.idea/**/mongoSettings.xml
 
 ## File-based project format:
 *.iws
@@ -30,7 +68,7 @@
 ## Plugin-specific files:
 
 # IntelliJ
-/out/
+out/
 
 # mpeltonen/sbt-idea plugin
 .idea_modules/
@@ -38,53 +76,54 @@
 # JIRA plugin
 atlassian-ide-plugin.xml
 
+# Cursive Clojure plugin
+.idea/replstate.xml
+
 # Crashlytics plugin (for Android Studio and IntelliJ)
 com_crashlytics_export_strings.xml
 crashlytics.properties
 crashlytics-build.properties
 fabric.properties
-
-### Intellij Patch ###
-# Comment Reason: https://github.com/joeblau/gitignore.io/issues/186#issuecomment-215987721
-
-# *.iml
-# modules.xml
-# .idea/misc.xml
-# *.ipr
-
-
-### Scala ###
+### Java template
+# Compiled class file
 *.class
+
+# Log file
 *.log
 
-# sbt specific
-.cache
-.history
-.lib/
+# BlueJ files
+*.ctxt
+
+# Mobile Tools for Java (J2ME)
+.mtj.tmp/
+
+# Package Files #
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# virtual machine crash logs, see http://www.java.com/en/download/help/error_hotspot.xml
+hs_err_pid*
+### Scala template
+### SBT template
+# Simple Build Tool
+# http://www.scala-sbt.org/release/docs/Getting-Started/Directories.html#configuring-version-control
+
 dist/*
 target/
 lib_managed/
 src_managed/
 project/boot/
 project/plugins/project/
-project/target/*
-project/project/target/
-
-# Scala-IDE specific
-.scala_dependencies
-.worksheet
-
-# ENSIME specific
-.ensime_cache/
-.ensime
+.history
+.cache
+.lib/
+sbt-cache
+repositories
 
 
-### SBT ###
-# Simple Build Tool
-# http://www.scala-sbt.org/release/docs/Getting-Started/Directories.html#configuring-version-control
-
-
-# End of https://www.gitignore.io/api/intellij,scala,sbt
-.idea/
-
-tmp/*
+# lab configuration file
+.lab.cache
