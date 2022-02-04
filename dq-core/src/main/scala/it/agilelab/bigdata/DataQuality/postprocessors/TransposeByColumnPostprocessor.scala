@@ -98,9 +98,7 @@ final class TransposeByColumnPostprocessor(config: Config, settings: DQSettings)
           .select((hlCols ++ colsToRemain).map(col): _*)
     }
 
-    HdfsWriter.saveVirtualSource(headless, target, settings.refDateString)(
-      fs,
-      sqlContext.sparkContext)
+    HdfsWriter.saveVirtualSource(headless, target, settings.refDateString)
 
     new HdfsFile(target)
   }

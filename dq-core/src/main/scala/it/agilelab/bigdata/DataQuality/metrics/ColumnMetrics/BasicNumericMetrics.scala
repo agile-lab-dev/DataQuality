@@ -3,6 +3,8 @@ package it.agilelab.bigdata.DataQuality.metrics.ColumnMetrics
 import it.agilelab.bigdata.DataQuality.metrics.MetricCalculator
 import it.agilelab.bigdata.DataQuality.metrics.MetricProcessor.ParamMap
 import it.agilelab.bigdata.DataQuality.utils.{getParametrizedMetricTail, _}
+import org.apache.spark.sql.types.Decimal
+
 import org.isarnproject.sketches.TDigest
 
 import scala.math.sqrt
@@ -447,5 +449,79 @@ object BasicNumericMetrics {
         this.cnt + m2.asInstanceOf[NumberValuesMetricCalculator].cnt,
         paramMap)
   }
+
+  /**
+   * Calculates sum of provided elements
+   * @param sum Current sum
+   *
+   * @return result map with keys:
+   *   "SUM_DECIMAL_NUMBER"
+   */
+  case class SumDecimalValueMetricCalculator(sum: Decimal)
+    extends MetricCalculator {
+
+    def this(paramMap: Map[String, Any]) {
+      this(Decimal(0D))
+    }
+
+    override def increment(values: Seq[Any]): MetricCalculator = {
+      tryToDecimal(values.head) match {
+        case Some(v) => SumDecimalValueMetricCalculator(v + sum)
+        case None    => this
+      }
+    }
+
+    override def result(): Map[String, (Double, Option[String])] =
+      Map("SUM_DECIMAL_NUMBER" -> (sum.toDouble, None))
+
+    override def merge(m2: MetricCalculator): MetricCalculator =
+      SumDecimalValueMetricCalculator(
+        this.sum + m2.asInstanceOf[SumDecimalValueMetricCalculator].sum)
+  }
+
+  /**
+   * Calculates standard deviation and mean value for provided elements
+   * @param sum Current sum
+   * @param sqSum Current squared sum
+   * @param cnt Current element count
+   *
+   * @return result map with keys:
+   *   "STD_DECIMAL_NUMBER"
+   *   "AVG_DECIMAL_NUMBER"
+   */
+  case class StdAvgDecimalValueCalculator(sum: Decimal, sqSum: Decimal, cnt: Int)
+    extends MetricCalculator {
+
+    def this(paramMap: Map[String, Any]) {
+      this(Decimal(0D), Decimal(0D), 0)
+    }
+
+    override def increment(values: Seq[Any]): MetricCalculator = {
+      tryToDecimal(values.head) match {
+        case Some(v) =>
+          StdAvgDecimalValueCalculator(sum + v, sqSum + (v * v), cnt + 1)
+        case None => this
+      }
+    }
+
+    override def result(): Map[String, (Double, Option[String])] = {
+      val mean: Decimal = sum / Decimal(cnt)
+      val variance: Decimal = sqSum / Decimal(cnt) - mean * mean
+      Map(
+        "STD_DECIMAL_NUMBER" -> (sqrt(variance.toDouble), None),
+        "AVG_DECIMAL_NUMBER" -> (mean.toDouble, None)
+      )
+    }
+
+    override def merge(m2: MetricCalculator): MetricCalculator = {
+      val cm2 = m2.asInstanceOf[StdAvgDecimalValueCalculator]
+      StdAvgDecimalValueCalculator(
+        this.sum + cm2.sum,
+        this.sqSum + cm2.sqSum,
+        this.cnt + cm2.cnt
+      )
+    }
+  }
+
 
 }

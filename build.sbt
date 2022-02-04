@@ -3,7 +3,7 @@ import com.typesafe.sbt.SbtNativePackager.autoImport.NativePackagerHelper._
 import sbt.Keys.scalaVersion
 
 ThisBuild / organization := "it.agilelab"
-ThisBuild / version := "1.3.0-SNAPSHOT"
+ThisBuild / version := "1.3.2"
 
 scalacOptions ++= Seq(
   "-target:jvm-1.8",
@@ -80,7 +80,6 @@ lazy val core = (project in file("dq-core"))
       }
       ((resourceDirectory in Compile).value / confFile) -> "conf/application.conf"
     },
-
     Universal / mappings ++= {
       val integrationFolder = integrationEnv.value match {
         case _ => "integration/dev"

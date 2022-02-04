@@ -70,7 +70,7 @@ final class EnrichPostprocessor(config: Config, settings: DQSettings)
     HdfsWriter.saveVirtualSource(
       dfWithExtra.drop("teapot"),
       target,
-      settings.refDateString)(fs, sqlContext.sparkContext)
+      settings.refDateString)
 
     new HdfsFile(target)
   }

@@ -14,10 +14,12 @@ import org.apache.spark.sql.{Column, DataFrame, SQLContext}
 
 import scala.collection.JavaConversions._
 
-final class ArrangePostprocessor(config: Config, settings: DQSettings)
-    extends BasicPostprocessor(config, settings) {
+final class ArrangePostprocessor(config: Config, settings: DQSettings) extends BasicPostprocessor(config, settings) {
 
-  case class ColumnSelector(name: String, tipo: Option[String] = None, format: Option[String] = None, precision: Option[Integer] = None) {
+  case class ColumnSelector(name: String,
+                            tipo: Option[String] = None,
+                            format: Option[String] = None,
+                            precision: Option[Integer] = None) {
     def toColumn()(implicit df: DataFrame): Column = {
 
       val dataType: Option[NumericType with Product with Serializable] =
@@ -32,12 +34,12 @@ final class ArrangePostprocessor(config: Config, settings: DQSettings)
       import org.apache.spark.sql.functions.format_string
 
       (dataType, precision, format) match {
-        case (Some(dt), None, None) => df(name).cast(dt)
-        case(Some(dt), None, Some(f)) => format_string(f, df(name).cast(dt)).alias(name)
-        case (Some(dt), Some(p),None) => format_number(df(name).cast(dt), p).alias(name)
-        case (None, Some(p), None) => format_number(df(name), p).alias(name)
-        case (None, None, Some(f)) => format_string(f, df(name)).alias(name)
-        case _ => df(name)
+        case (Some(dt), None, None)    => df(name).cast(dt)
+        case (Some(dt), None, Some(f)) => format_string(f, df(name).cast(dt)).alias(name)
+        case (Some(dt), Some(p), None) => format_number(df(name).cast(dt), p).alias(name)
+        case (None, Some(p), None)     => format_number(df(name), p).alias(name)
+        case (None, None, Some(f))     => format_string(f, df(name)).alias(name)
+        case _                         => df(name)
       }
     }
   }
@@ -72,21 +74,17 @@ final class ArrangePostprocessor(config: Config, settings: DQSettings)
       }
     }
 
-  override def process(vsRef: Set[HdfsFile],
-                       metRes: Seq[MetricResult],
-                       chkRes: Seq[CheckResult])(
+  override def process(vsRef: Set[HdfsFile], metRes: Seq[MetricResult], chkRes: Seq[CheckResult])(
       implicit fs: FileSystem,
       sqlContext: SQLContext,
       settings: DQSettings): HdfsFile = {
 
-    val reqVS: HdfsFile = vsRef.filter(vr => vr.id == vs).head
+    val reqVS: HdfsFile        = vsRef.filter(vr => vr.id == vs).head
     implicit val df: DataFrame = HdfsReader.load(reqVS, settings.ref_date).head
 
     val arrangeDF = df.select(columns.map(_.toColumn): _*)
 
-    HdfsWriter.saveVirtualSource(arrangeDF, target, settings.refDateString)(
-      fs,
-      sqlContext.sparkContext)
+    HdfsWriter.saveVirtualSource(arrangeDF, target, settings.refDateString)
 
     new HdfsFile(target)
   }

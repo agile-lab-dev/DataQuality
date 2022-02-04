@@ -64,8 +64,8 @@ You can improve it by sending pull requests to this repository.
 ## Installation
 
 Data Quality is currently using following dependencies:
-- Scala 2.10(core)/2.11(ui)
-- Apache Spark 1.6
+- Scala 2.11.12
+- Apache Spark 2.4.0
 - PostgreSQL 9.3 (works also with Oracle and SQLite)
 
 To be able to use all the features of Data Quality you'll need to setup a database
@@ -78,12 +78,12 @@ All modules of DQ works independently.:
 
 ## Building CORE module
 
-Data Quality core module can be built with 2 different versions of Spark (1.6.0, 2.2.0). By default if will select 1.6.0. In order to build with Spark 2 set Multiversion.sparkVersion as in following snippet:
+From the sbt console opened in the root project issue the following commands:
 ```
-- set Multiversion.sparkVersion := "2.2.0"
 - project core
 - assembly
 ```
+This should generate the core artifact in `<your-project-dir>/dq-core/target/scala-<scala-version>/dq-core_<spark-major.minor>_<scala-major.minor.patch>-<dq-version>.jar`
 
 ## Examples
 

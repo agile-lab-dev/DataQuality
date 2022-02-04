@@ -137,14 +137,36 @@ Returns sum of all numerical values in the column
 
 Parameters: none
 
+##### "SUM_DECIMAL_NUMBER"
+Returns sum of all numerical values in the column
+
+In financial use case, this metric is recommended over SUM_NUMBER
+
+Parameters: none
+
 ##### "AVG_NUMBER"
 Returns average of all numerical value inside of the column
+
+Parameters: none
+
+##### "AVG_DECIMAL_NUMBER"
+Returns average of all numerical value inside of the column
+
+In financial use case, this metric is recommended over AVG_NUMBER
 
 Parameters: none
 
 ##### "STD_NUMBER"
 Return standard deviation of all numerical values inside of the column
 		
+Parameters: none
+
+##### "STD_DECIMAL_NUMBER"
+
+Return standard deviation of all numerical values inside of the column
+		
+In financial use case, this metric is recommended over STD_NUMBER
+
 Parameters: none
 
 ##### "MIN_STRING"
